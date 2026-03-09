@@ -1,0 +1,22 @@
+{
+  "name": "portal",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/svelte": "^7.2.5",
+    "@tailwindcss/vite": "^4.2.1",
+    "astro": "^5.17.1",
+    "chart.js": "^4.5.1",
+    "flag-icons": "^7.5.0",
+    "svelte": "^5.53.7",
+    "tailwindcss": "^4.2.1",
+    "typescript": "^5.9.3",
+    "yup": "^1.7.1"
+  }
+}

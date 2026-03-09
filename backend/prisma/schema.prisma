@@ -1,0 +1,381 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Module {
+  id          String       @id @default(uuid())
+  name        String       @unique
+  key         String?      @unique
+  slug        String       @unique
+  description String?
+  group       String       @default("general")
+  path        String?
+  icon        String?
+  page        String       @default("default") // default, fab, side
+  endpoints   String?      // JSON string for API endpoints configuration
+  forms       String?      // JSON string for form definitions configuration
+  parent_id   String?
+  meta        String?      // JSON string for comprehensive module metadata (filter, chart, etc.)
+  config      String?      // JSON string for module configuration (e.g., sidebar visibility)
+  parent      Module?      @relation("SubModules", fields: [parent_id], references: [id], onDelete: Cascade)
+  subModules  Module[]     @relation("SubModules")
+  created_at  DateTime     @default(now())
+  updated_at  DateTime     @updatedAt
+  permissions Permission[]
+
+  @@map("modules")
+}
+
+model Permission {
+  id              String           @id @default(uuid())
+  name            String           @unique
+  slug            String           @unique
+  description     String?
+  module_id       String
+  module          Module           @relation(fields: [module_id], references: [id], onDelete: Cascade)
+  created_at      DateTime         @default(now())
+  updated_at      DateTime         @updatedAt
+  rolePermissions RolePermission[]
+
+  @@map("permissions")
+}
+
+model Role {
+  id              String           @id @default(uuid())
+  name            String           @unique
+  slug            String           @unique
+  description     String?
+  group           String?          @default("general")
+  created_at      DateTime         @default(now())
+  updated_at      DateTime         @updatedAt
+  rolePermissions RolePermission[]
+  userRoles       UserRole[]
+
+  @@map("roles")
+}
+
+model RolePermission {
+  role_id       String
+  permission_id String
+  role          Role       @relation(fields: [role_id], references: [id], onDelete: Cascade)
+  permission    Permission @relation(fields: [permission_id], references: [id], onDelete: Cascade)
+  created_at    DateTime   @default(now())
+
+  @@id([role_id, permission_id])
+  @@map("role_permissions")
+}
+
+model User {
+  id         String   @id @default(uuid())
+  username   String   @unique
+  password   String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  userRoles  UserRole[]
+  notifications Notification[]
+
+  @@map("users")
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  user_id     String
+  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  title       String
+  message     String
+  type        String   @default("info") // info, success, warning, error
+  is_read     Boolean  @default(false)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  data        String?  // JSON string for additional data (e.g. link, related_id)
+
+  @@map("notifications")
+}
+
+model UserRole {
+  user_id    String
+  role_id    String
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  role       Role     @relation(fields: [role_id], references: [id], onDelete: Cascade)
+  created_at DateTime @default(now())
+
+  @@id([user_id, role_id])
+  @@map("user_roles")
+}
+
+model Institute {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  address     String?
+  type        String   @default("school") // school, university, mixed, etc.
+  status      String   @default("active") // active, inactive
+  admin_id    String?
+  teacher_count Int      @default(0)
+  student_count Int      @default(0)
+  staff_count   Int      @default(0)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  units       Unit[]
+  streams     Stream[]
+  staffInstitutes StaffInstitute[]
+  students    Student[]
+  teachers    Teacher[]
+  bannerInstitutes BannerInstitute[]
+
+  @@map("institutes")
+}
+
+model Staff {
+  id           String    @id @default(uuid())
+  name         String
+  email        String?   @unique
+  phone        String?
+  status       String    @default("active")
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+  staffInstitutes StaffInstitute[]
+
+  @@map("staffs")
+}
+
+model StaffInstitute {
+  staff_id     String
+  institute_id String
+  staff        Staff     @relation(fields: [staff_id], references: [id], onDelete: Cascade)
+  institute    Institute @relation(fields: [institute_id], references: [id], onDelete: Cascade)
+
+  @@id([staff_id, institute_id])
+  @@map("staff_institutes")
+}
+
+model Student {
+  id           String    @id @default(uuid())
+  name         String
+  email        String?   @unique
+  phone        String?
+  status       String    @default("active")
+  institute_id String
+  institute    Institute @relation(fields: [institute_id], references: [id], onDelete: Cascade)
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+
+  @@map("students")
+}
+
+model Teacher {
+  id           String    @id @default(uuid())
+  name         String
+  email        String?   @unique
+  phone        String?
+  status       String    @default("active")
+  institute_id String
+  institute    Institute @relation(fields: [institute_id], references: [id], onDelete: Cascade)
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+
+  @@map("teachers")
+}
+
+model Unit {
+  id           String    @id @default(uuid())
+  name         String
+  code         String?
+  description  String?
+  status       String    @default("active")
+  institute_id String
+  institute    Institute @relation(fields: [institute_id], references: [id], onDelete: Cascade)
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+
+  @@map("units")
+}
+
+model Transaction {
+  id              String   @id @default(uuid())
+  date            DateTime @default(now())
+  description     String
+  amount          Decimal
+  type            String   // INCOME, EXPENSE
+  category_id     String
+  category        TransactionCategory @relation(fields: [category_id], references: [id])
+  status          String   @default("COMPLETED") // PENDING, COMPLETED, CANCELLED
+  reference_no    String?  @unique
+  payment_method  String?
+  created_by      String?
+  currency        String   @default("IDR")
+  exchange_rate   Decimal  @default(1.0)
+  metadata        String?  // JSON for additional fields
+  invoice         Invoice?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  @@map("transactions")
+  @@index([date])
+  @@index([category_id])
+}
+
+model TransactionCategory {
+  id           String        @id @default(uuid())
+  name         String        @unique
+  type         String        // INCOME, EXPENSE
+  description  String?
+  transactions Transaction[]
+  created_at   DateTime      @default(now())
+  updated_at   DateTime      @updatedAt
+
+  @@map("transaction_categories")
+}
+
+model Invoice {
+  id             String      @id @default(uuid())
+  invoice_no     String      @unique
+  transaction_id String      @unique
+  transaction    Transaction @relation(fields: [transaction_id], references: [id], onDelete: Cascade)
+  client_name    String
+  client_email   String?
+  client_address String?
+  tax_amount     Decimal     @default(0)
+  discount_amount Decimal    @default(0)
+  total_amount   Decimal
+  status         String      @default("DRAFT") // DRAFT, SENT, PAID, VOID
+  due_date       DateTime?
+  notes          String?
+  template_id    String?
+  created_at     DateTime    @default(now())
+  updated_at     DateTime    @updatedAt
+
+  @@map("invoices")
+}
+
+model FinanceReport {
+  id          String   @id @default(uuid())
+  name        String
+  type        String   // MONTHLY, YEARLY, CUSTOM
+  parameters  String?  // JSON for filter parameters
+  format      String   // PDF, EXCEL, CSV
+  file_url    String?
+  status      String   @default("PENDING") // PENDING, GENERATING, COMPLETED, FAILED
+  created_by  String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@map("finance_reports")
+}
+
+model Stream {
+  id           String    @id @default(uuid())
+  name         String
+  code         String?
+  description  String?
+  status       String    @default("active")
+  institute_id String
+  institute    Institute @relation(fields: [institute_id], references: [id], onDelete: Cascade)
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+
+  @@map("streams")
+}
+
+model Gender {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  name        String   // JSON string for translation {en: "...", id: "..."}
+  description String?  // JSON string for translation {en: "...", id: "..."}
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@map("genders")
+}
+
+model Ethnicity {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  name        String   
+  description String?  
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@map("ethnicities")
+}
+
+model Religion {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  name        String   
+  description String?  
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@map("religions")
+}
+
+model Banner {
+  id              String           @id @default(uuid())
+  type            String           // GENERAL, INSTITUTE
+  title           String?
+  image           String           // JSON string for image metadata
+  target_url      String?
+  start_date      DateTime?
+  end_date        DateTime?
+  is_active       Boolean          @default(true)
+  created_at      DateTime         @default(now())
+  updated_at      DateTime         @updatedAt
+  bannerInstitutes BannerInstitute[]
+
+  @@map("banners")
+}
+
+model BannerInstitute {
+  banner_id    String
+  institute_id String
+  banner       Banner    @relation(fields: [banner_id], references: [id], onDelete: Cascade)
+  institute    Institute @relation(fields: [institute_id], references: [id], onDelete: Cascade)
+
+  @@id([banner_id, institute_id])
+  @@map("banner_institutes")
+}
+
+model Article {
+  id          String           @id @default(uuid())
+  title       String
+  content     String?
+  category_id String?
+  category    ArticleCategory? @relation(fields: [category_id], references: [id])
+  created_at  DateTime         @default(now())
+  updated_at  DateTime         @updatedAt
+
+  @@map("articles")
+}
+
+model ArticleCategory {
+  id         String    @id @default(uuid())
+  name       String    @unique
+  articles   Article[]
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+
+  @@map("article_categories")
+}
+
+model Setting {
+  group       String   // overview, mail, xendit, tolgee
+  key         String
+  value       String   // Enkripsi jika sensitif
+  is_sensitive Boolean  @default(false)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@id([group, key])
+  @@map("settings")
+}

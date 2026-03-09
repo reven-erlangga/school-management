@@ -1,0 +1,38 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import DefaultPage from "../../components/svelte/pages/admin/DefaultPage.svelte";
+import MonitoringPage from "../../components/svelte/pages/admin/MonitoringPage.svelte";
+
+export async function getStaticPaths() {
+  const modules = [
+    { slug: 'users', title: 'Users' },
+    { slug: 'teachers', title: 'Teachers' },
+    { slug: 'students', title: 'Students' },
+    { slug: 'institutes', title: 'Institutes' },
+    { slug: 'units', title: 'Units' },
+    { slug: 'classes', title: 'Classes' },
+    { slug: 'subjects', title: 'Subjects' },
+    { slug: 'settings', title: 'Settings' },
+    { slug: 'demographics', title: 'Demographics' },
+    { slug: 'transactions', title: 'Transactions' },
+    { slug: 'genders', title: 'Genders' },
+    { slug: 'ethnicities', title: 'Ethnicities' },
+    { slug: 'religions', title: 'Religions' },
+    { slug: 'articles', title: 'Articles' },
+    { slug: 'analytics', title: 'Analytics' },
+    { slug: 'monitoring', title: 'Monitoring' },
+  ];
+  
+  return modules.map((mod) => ({
+    params: { slug: mod.slug },
+    props: { title: mod.title },
+  }));
+}
+
+const { slug } = Astro.params;
+const { title } = Astro.props;
+---
+
+<Layout title={`${title} | Admin Portal`}>
+  <DefaultPage slug={slug} title={title} client:load transition:persist />
+</Layout>

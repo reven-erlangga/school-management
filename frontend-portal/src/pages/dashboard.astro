@@ -1,0 +1,8 @@
+---
+import Layout from "../layouts/Layout.astro";
+import MonitoringPage from "../components/svelte/pages/admin/MonitoringPage.svelte";
+---
+
+<Layout title="Dashboard | Admin Portal">
+  <MonitoringPage client:load transition:persist />
+</Layout>

@@ -1,0 +1,8 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import SchoolManagementPage from '../../components/svelte/pages/admin/SchoolManagementPage.svelte';
+---
+
+<Layout title="Manage Schools | Lumina Academy">
+  <SchoolManagementPage client:only="svelte" />
+</Layout>

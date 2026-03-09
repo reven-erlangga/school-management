@@ -1,0 +1,93 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import '../styles/global.css';
+import { foundationData } from '../consts';
+import Snackbar from '../components/svelte/molecules/Snackbar.svelte';
+
+interface Props {
+	title: string;
+	description?: string;
+}
+
+const { title, description = foundationData.description } = Astro.props;
+---
+
+<!doctype html>
+<html lang="id">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{title} | {foundationData.name}</title>
+		<meta name="description" content={description} />
+		<ClientRouter />
+		<script>
+			// Check initialization status on page load
+			(async () => {
+				const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:3001';
+				try {
+					const res = await fetch(`${API_URL}/`);
+					const currentPath = window.location.pathname;
+
+					if (res.status === 503) {
+						// If backend is not initialized (503), force redirect to /setup
+						if (currentPath !== '/setup') {
+							window.location.href = '/setup';
+						}
+					} else {
+						// If backend IS initialized (200/ok), force redirect away from /setup
+						if (currentPath === '/setup') {
+							window.location.href = '/';
+						}
+					}
+				} catch (error) {
+					// If backend is down completely (network error), we might want to stay on current page or show error
+					console.error('Failed to check initialization status:', error);
+				}
+			})();
+		</script>
+	</head>
+	<body class="bg-gray-50 text-gray-900 font-sans scroll-smooth">
+		<slot />
+		<Snackbar client:idle />
+	</body>
+</html>
+
+<style is:global>
+	/* Global Slim Scrollbar */
+	::-webkit-scrollbar {
+		width: 6px;
+		height: 6px;
+	}
+
+	::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	::-webkit-scrollbar-thumb {
+		background: #e2e8f0;
+		border-radius: 10px;
+		transition: background 0.3s ease;
+	}
+
+	::-webkit-scrollbar-thumb:hover {
+		background: #cbd5e1;
+		
+	}
+
+	/* For Firefox */
+	* {
+		scrollbar-width: thin;
+		scrollbar-color: #e2e8f0 transparent;
+	}
+
+	/* Utility: No Scrollbar */
+	.no-scrollbar::-webkit-scrollbar {
+		display: none;
+	}
+	.no-scrollbar {
+		-ms-overflow-style: none;
+		scrollbar-width: none;
+	}
+</style>

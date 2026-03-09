@@ -1,0 +1,8 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import DemographicsPage from "../../components/svelte/pages/admin/DemographicsPage.svelte";
+---
+
+<Layout title="Demographics | Admin Panel">
+  <DemographicsPage client:only="svelte" />
+</Layout>
