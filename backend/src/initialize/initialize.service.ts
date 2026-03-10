@@ -1,6 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
-import { InitializationStatusEntity, SettingEntity } from './entities/setting.entity';
+import {
+  InitializationStatusEntity,
+  SettingEntity,
+} from './entities/setting.entity';
 
 @Injectable()
 export class InitializeService {
@@ -14,7 +17,11 @@ export class InitializeService {
     const categories = ['general', 'vault', 'mail'];
     const results = await Promise.all(
       categories.map(async (group) => {
-        if (group === 'vault' && process.env.VAULT_ADDR && process.env.VAULT_TOKEN) {
+        if (
+          group === 'vault' &&
+          process.env.VAULT_ADDR &&
+          process.env.VAULT_TOKEN
+        ) {
           return { group, exists: true };
         }
         const count = await (this.prisma as any).setting.count({
@@ -30,7 +37,7 @@ export class InitializeService {
     }, {} as any);
 
     status.is_initialized = categories.every((c) => status[c]);
-    
+
     // Update cache
     this.isInitializedCache = status.is_initialized;
     this.lastCheckTime = Date.now();
@@ -43,7 +50,10 @@ export class InitializeService {
       return true; // Once true, usually stays true unless manually reset (which we don't handle here)
     }
 
-    if (this.isInitializedCache !== null && (Date.now() - this.lastCheckTime < this.CACHE_TTL)) {
+    if (
+      this.isInitializedCache !== null &&
+      Date.now() - this.lastCheckTime < this.CACHE_TTL
+    ) {
       return this.isInitializedCache;
     }
 

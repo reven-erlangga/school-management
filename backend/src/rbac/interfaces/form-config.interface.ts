@@ -1,16 +1,20 @@
 export type FormType = 'modal' | 'page' | 'direct';
 export type FormStyle = 'form' | 'step';
 
-export type FieldType = 
-  | 'textfield' 
-  | 'textarea' 
-  | 'dropdown' 
-  | 'checkbox' 
-  | 'radiobutton' 
-  | 'date' 
+export type FieldType =
+  | 'textfield'
+  | 'textarea'
+  | 'dropdown'
+  | 'checkbox'
+  | 'radiobutton'
+  | 'date'
   | 'file';
 
-export type FeedbackType = 'success logo' | 'error logo' | 'alert notification' | 'toast message';
+export type FeedbackType =
+  | 'success logo'
+  | 'error logo'
+  | 'alert notification'
+  | 'toast message';
 
 export interface FormValidation {
   required?: boolean;

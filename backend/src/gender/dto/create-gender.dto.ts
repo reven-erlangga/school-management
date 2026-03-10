@@ -24,7 +24,11 @@ export class CreateGenderDto {
   @IsNotEmpty()
   name: TranslationDto;
 
-  @ApiProperty({ type: TranslationDto, description: 'Localized description', required: false })
+  @ApiProperty({
+    type: TranslationDto,
+    description: 'Localized description',
+    required: false,
+  })
   @IsObject()
   @IsOptional()
   description?: TranslationDto;

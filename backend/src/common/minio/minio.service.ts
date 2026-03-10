@@ -20,9 +20,16 @@ export class MinioService implements OnModuleInit {
     this.minioClient = new Minio.Client({
       endPoint: this.configService.get<string>('MINIO_ENDPOINT', 'localhost'),
       port: this.configService.get<number>('MINIO_PORT', 9000),
-      useSSL: this.configService.get<string>('MINIO_USE_SSL', 'false') === 'true',
-      accessKey: this.configService.get<string>('MINIO_ACCESS_KEY', 'minioadmin'),
-      secretKey: this.configService.get<string>('MINIO_SECRET_KEY', 'minioadmin'),
+      useSSL:
+        this.configService.get<string>('MINIO_USE_SSL', 'false') === 'true',
+      accessKey: this.configService.get<string>(
+        'MINIO_ACCESS_KEY',
+        'minioadmin',
+      ),
+      secretKey: this.configService.get<string>(
+        'MINIO_SECRET_KEY',
+        'minioadmin',
+      ),
     });
 
     await this.initializeBucket();
@@ -57,7 +64,9 @@ export class MinioService implements OnModuleInit {
     this.logger.log(`Bucket '${bucketName}' policy set to public read.`);
   }
 
-  async uploadFile(file: Express.Multer.File): Promise<{ url: string; name: string; size: number; type: string }> {
+  async uploadFile(
+    file: Express.Multer.File,
+  ): Promise<{ url: string; name: string; size: number; type: string }> {
     const { buffer, originalname, mimetype } = file;
     let fileBuffer = buffer;
     let fileName = originalname;
@@ -76,19 +85,31 @@ export class MinioService implements OnModuleInit {
     }
 
     // Generate hashed filename
-    const hash = crypto.createHash('md5').update(`${Date.now()}-${fileName}`).digest('hex');
+    const hash = crypto
+      .createHash('md5')
+      .update(`${Date.now()}-${fileName}`)
+      .digest('hex');
     const ext = path.extname(fileName);
     const hashedFileName = `${hash}${ext}`;
 
     // Upload
-    await this.minioClient.putObject(this.bucketName, hashedFileName, fileBuffer, fileBuffer.length, {
-      'Content-Type': contentType,
-    });
+    await this.minioClient.putObject(
+      this.bucketName,
+      hashedFileName,
+      fileBuffer,
+      fileBuffer.length,
+      {
+        'Content-Type': contentType,
+      },
+    );
 
-    const protocol = this.configService.get<string>('MINIO_USE_SSL', 'false') === 'true' ? 'https' : 'http';
+    const protocol =
+      this.configService.get<string>('MINIO_USE_SSL', 'false') === 'true'
+        ? 'https'
+        : 'http';
     const host = this.configService.get<string>('MINIO_ENDPOINT', 'localhost');
     const port = this.configService.get<number>('MINIO_PORT', 9000);
-    
+
     // Construct Public URL
     // Use MINIO_PUBLIC_URL if defined, otherwise fallback to constructed URL
     const publicUrlBase = this.configService.get<string>('MINIO_PUBLIC_URL');
@@ -97,7 +118,10 @@ export class MinioService implements OnModuleInit {
     if (publicUrlBase) {
       publicUrl = `${publicUrlBase}/${this.bucketName}/${hashedFileName}`;
     } else {
-      const protocol = this.configService.get<string>('MINIO_USE_SSL', 'false') === 'true' ? 'https' : 'http';
+      const protocol =
+        this.configService.get<string>('MINIO_USE_SSL', 'false') === 'true'
+          ? 'https'
+          : 'http';
       // For public access from browser, we usually want localhost if dev, or the domain.
       // But inside docker, MINIO_ENDPOINT is 'minio'.
       // If we are not using MINIO_PUBLIC_URL, we default to localhost:9000 for dev convenience.
@@ -118,20 +142,23 @@ export class MinioService implements OnModuleInit {
       const image = sharp(buffer);
       const metadata = await image.metadata();
 
-      if (metadata.size && metadata.size > 1024 * 1024) { // > 1MB
+      if (metadata.size && metadata.size > 1024 * 1024) {
+        // > 1MB
         // Compress
         // Convert to jpeg/png with quality reduction or resize if huge
         // Simple strategy: resize to max 1920 width if larger, and reduce quality
         if (metadata.width && metadata.width > 1920) {
           image.resize(1920);
         }
-        
+
         if (metadata.format === 'jpeg' || metadata.format === 'jpg') {
-            return await image.jpeg({ quality: 80 }).toBuffer();
+          return await image.jpeg({ quality: 80 }).toBuffer();
         } else if (metadata.format === 'png') {
-            return await image.png({ quality: 80, compressionLevel: 8 }).toBuffer();
+          return await image
+            .png({ quality: 80, compressionLevel: 8 })
+            .toBuffer();
         } else if (metadata.format === 'webp') {
-            return await image.webp({ quality: 80 }).toBuffer();
+          return await image.webp({ quality: 80 }).toBuffer();
         }
       }
       return buffer;
@@ -141,9 +168,15 @@ export class MinioService implements OnModuleInit {
     }
   }
 
-  private async compressVideo(buffer: Buffer, originalName: string): Promise<{ buffer: Buffer; filename: string }> {
+  private async compressVideo(
+    buffer: Buffer,
+    originalName: string,
+  ): Promise<{ buffer: Buffer; filename: string }> {
     return new Promise((resolve, reject) => {
-      const tempInput = path.join('/tmp', `input-${Date.now()}-${originalName}`);
+      const tempInput = path.join(
+        '/tmp',
+        `input-${Date.now()}-${originalName}`,
+      );
       const tempOutput = path.join('/tmp', `output-${Date.now()}.mp4`);
 
       fs.writeFileSync(tempInput, buffer);
@@ -179,8 +212,8 @@ export class MinioService implements OnModuleInit {
   }
 
   async getFileMetadata(url: string) {
-      // Extract key from URL
-      // TODO: Implement if needed for specific metadata retrieval from MinIO
-      return null;
+    // Extract key from URL
+    // TODO: Implement if needed for specific metadata retrieval from MinIO
+    return null;
   }
 }

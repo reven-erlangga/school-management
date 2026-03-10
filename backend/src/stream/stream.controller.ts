@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { StreamService } from './stream.service';
 import { CreateStreamDto, UpdateStreamDto } from './dto/create-stream.dto';
 
@@ -12,7 +21,15 @@ export class StreamController {
   }
 
   @Get()
-  findAll(@Query() query: { page?: number; limit?: number; name?: string; institute_id?: string }) {
+  findAll(
+    @Query()
+    query: {
+      page?: number;
+      limit?: number;
+      name?: string;
+      institute_id?: string;
+    },
+  ) {
     return this.streamService.findAll(query);
   }
 

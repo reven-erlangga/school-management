@@ -379,3 +379,58 @@ model Setting {
   @@id([group, key])
   @@map("settings")
 }
+
+model Country {
+  id              String   @id @default(uuid())
+  name            String
+  iso3            String
+  iso2            String
+  phone_code      String?
+  capital         String?
+  currency        String?
+  currency_symbol String?
+  tld             String?
+  native          String?
+  region          String?
+  subregion       String?
+  timezones       Json?
+  translations    Json?
+  latitude        String?
+  longitude       String?
+  emoji           String?
+  emojiU          String?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  states          State[]
+
+  @@map("countries")
+}
+
+model State {
+  id          String   @id @default(uuid())
+  name        String
+  state_code  String?
+  latitude    String?
+  longitude   String?
+  country_id  String
+  country     Country  @relation(fields: [country_id], references: [id], onDelete: Cascade)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  cities      City[]
+
+  @@map("states")
+}
+
+model City {
+  id          String   @id @default(uuid())
+  name        String
+  latitude    String?
+  longitude   String?
+  state_id    String
+  state       State    @relation(fields: [state_id], references: [id], onDelete: Cascade)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@map("cities")
+}

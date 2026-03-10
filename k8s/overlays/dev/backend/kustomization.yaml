@@ -1,0 +1,46 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: school-management-dev
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+resources:
+- ../../../base/backend
+- deps.yaml
+- migration-job.yaml
+
+patches:
+- path: ingress.yaml
+- path: service-patch.yaml
+- path: image-policy-patch.yaml
+- path: image-pullsecret-patch.yaml
+
+images:
+- name: ghcr.io/reven-erlangga/school-management/backend
+  newTag: dev
+
+configMapGenerator:
+- name: school-backend-config
+  literals:
+  - NODE_ENV=production
+  - PORT=3000
+  - REDIS_HOST=redis
+  - REDIS_PORT=6379
+  - MINIO_ENDPOINT=minio
+  - MINIO_PORT=9000
+  - MINIO_USE_SSL=false
+  - VAULT_ADDR=http://vault:8200
+
+secretGenerator:
+- name: school-backend-secret
+  literals:
+  - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/school_management?schema=public
+  - JWT_SECRET=supersecretkey
+  - JWT_REFRESH_SECRET=supersecretrefreshkey
+  - JWT_EXPIRATION=1h
+  - JWT_REFRESH_EXPIRATION=7d
+  - MINIO_ACCESS_KEY=minioadmin
+  - MINIO_SECRET_KEY=minioadmin
+  - VAULT_TOKEN=root

@@ -15,13 +15,13 @@ export class InstituteService {
   ) {}
 
   async create(createInstituteDto: CreateInstituteDto) {
-    const { 
-      accountType, 
-      existingAdminId, 
-      adminFullName, 
-      adminEmail, 
+    const {
+      accountType,
+      existingAdminId,
+      adminFullName,
+      adminEmail,
       adminPhone,
-      ...instituteData 
+      ...instituteData
     } = createInstituteDto;
 
     let adminId = existingAdminId;
@@ -70,17 +70,19 @@ export class InstituteService {
     );
 
     // Enhance items with admin names if possible
-    const enhancedData = await Promise.all(result.data.map(async (item: any) => {
-      let adminName = 'Not assigned';
-      if (item.admin_id) {
-        const user = await (this.prisma as any).user.findUnique({
-          where: { id: item.admin_id },
-          select: { username: true }
-        });
-        if (user) adminName = user.username;
-      }
-      return { ...item, admin_name: adminName };
-    }));
+    const enhancedData = await Promise.all(
+      result.data.map(async (item: any) => {
+        let adminName = 'Not assigned';
+        if (item.admin_id) {
+          const user = await (this.prisma as any).user.findUnique({
+            where: { id: item.admin_id },
+            select: { username: true },
+          });
+          if (user) adminName = user.username;
+        }
+        return { ...item, admin_name: adminName };
+      }),
+    );
 
     return {
       ...result,
@@ -108,7 +110,7 @@ export class InstituteService {
     if (institute.admin_id) {
       const user = await (this.prisma as any).user.findUnique({
         where: { id: institute.admin_id },
-        select: { username: true }
+        select: { username: true },
       });
       if (user) adminName = user.username;
     }

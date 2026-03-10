@@ -7,7 +7,7 @@ import { AuthEntity } from './entities/auth.entity';
 export class AuthService {
   constructor(
     private prisma: PrismaService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
   ) {}
 
   private generateTokens(payload: any) {
@@ -45,9 +45,9 @@ export class AuthService {
     }
 
     const roles = user.userRoles.map((ur: any) => ur.role.slug);
-    
-    const permissions = user.userRoles.flatMap((ur: any) => 
-      ur.role.rolePermissions.map((rp: any) => rp.permission.slug)
+
+    const permissions = user.userRoles.flatMap((ur: any) =>
+      ur.role.rolePermissions.map((rp: any) => rp.permission.slug),
     );
 
     const payload = {
@@ -64,13 +64,15 @@ export class AuthService {
 
   async refreshToken(token: string) {
     try {
-      console.log('[Auth] Refreshing token...', { token: token.substring(0, 10) + '...' });
+      console.log('[Auth] Refreshing token...', {
+        token: token.substring(0, 10) + '...',
+      });
       const payload = this.jwtService.verify(token);
       console.log('[Auth] Refresh token payload:', payload);
-      
+
       delete payload.iat;
       delete payload.exp;
-      
+
       const tokens = this.generateTokens(payload);
       return new AuthEntity(tokens);
     } catch (e) {
@@ -81,7 +83,9 @@ export class AuthService {
 
   async validateToken(token: string) {
     try {
-      console.log('[Auth] Validating token...', { token: token.substring(0, 10) + '...' });
+      console.log('[Auth] Validating token...', {
+        token: token.substring(0, 10) + '...',
+      });
       const payload = this.jwtService.verify(token);
       console.log('[Auth] Token payload:', payload);
       return payload;

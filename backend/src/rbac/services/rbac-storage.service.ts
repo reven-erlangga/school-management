@@ -20,15 +20,15 @@ export class RbacStorageService implements IDynamicStorageRbac {
 
     // Format permissions into { permissionName: ['action1', 'action2'] }
     // In our case, the action is usually the suffix after the dot, e.g., 'create' in 'teacher.create'
-    // But nestjs-rbac allows us to map them directly. 
+    // But nestjs-rbac allows us to map them directly.
     // Let's simplify: the permission name is the key, and we can just use a default action like 'execute' or similar.
     // Or better: module name is permission, and actions are create, view, edit, delete.
-    
+
     const rbacPermissions: Record<string, string[]> = {};
     permissions.forEach((p) => {
       const moduleName = p.module.name;
       const action = p.name.split('.')[1] || 'access';
-      
+
       if (!rbacPermissions[moduleName]) {
         rbacPermissions[moduleName] = [];
       }

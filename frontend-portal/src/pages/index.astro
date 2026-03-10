@@ -2,7 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 import LoginForm from "../modules/form/LoginForm.svelte";
 import LoginVisual from "../components/svelte/organisms/landing/LoginVisual.svelte";
-import ThemeSwitch from "../components/svelte/molecules/ThemeSwitch.svelte";
+import Theme from "../modules/theme/Index.svelte";
 import LanguageSwitch from "../components/svelte/molecules/LanguageSwitch.svelte";
 ---
 
@@ -18,7 +18,7 @@ import LanguageSwitch from "../components/svelte/molecules/LanguageSwitch.svelte
     <!-- Right: Actions -->
     <div class="pointer-events-auto flex items-center gap-3">
       <LanguageSwitch client:load />
-      <ThemeSwitch client:load />
+      <Theme client:load />
     </div>
   </nav>
 

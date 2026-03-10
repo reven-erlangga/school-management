@@ -6,7 +6,15 @@ export class FinanceService {
   constructor(private prisma: PrismaService) {}
 
   async findAllTransactions(query: any) {
-    const { page = 1, limit = 10, search, category, status, startDate, endDate } = query;
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      category,
+      status,
+      startDate,
+      endDate,
+    } = query;
     const skip = (page - 1) * limit;
 
     const where: any = {};

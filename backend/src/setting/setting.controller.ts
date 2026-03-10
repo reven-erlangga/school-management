@@ -18,7 +18,7 @@ export class SettingController {
     // Frontend should use the /translations endpoint which proxies requests securely.
     return {
       // Add other public configs here if needed, but avoid keys
-      message: "Public configuration endpoint",
+      message: 'Public configuration endpoint',
     };
   }
 
@@ -28,7 +28,10 @@ export class SettingController {
   }
 
   @Post(':group')
-  createOrUpdate(@Param('group') group: string, @Body() dto: Record<string, any>) {
+  createOrUpdate(
+    @Param('group') group: string,
+    @Body() dto: Record<string, any>,
+  ) {
     return this.settingService.createOrUpdate(group, dto);
   }
 }

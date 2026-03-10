@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { BannerService } from './banner.service';
 import { CreateBannerDto, BannerType } from './dto/create-banner.dto';
 import { UpdateBannerDto } from './dto/update-banner.dto';
@@ -12,7 +22,9 @@ export class BannerController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Create a new banner (General or Institute-specific)' })
+  @ApiOperation({
+    summary: 'Create a new banner (General or Institute-specific)',
+  })
   create(@Body() createBannerDto: CreateBannerDto) {
     return this.bannerService.create(createBannerDto);
   }

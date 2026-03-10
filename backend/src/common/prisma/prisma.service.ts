@@ -3,7 +3,10 @@ import { PrismaClient } from '@prisma/client';
 import { RedisService } from '../redis/redis.service';
 
 @Injectable()
-export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
+export class PrismaService
+  extends PrismaClient
+  implements OnModuleInit, OnModuleDestroy
+{
   constructor(private readonly redisService: RedisService) {
     super();
 

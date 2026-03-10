@@ -26,14 +26,14 @@ export class UploadService {
     }
 
     const uploadedFile = await this.minioService.uploadFile(file);
-    
+
     const fileData = {
       url: uploadedFile.url,
       name: uploadedFile.name,
       type: uploadedFile.type,
       size: uploadedFile.size,
     };
-    
+
     // Update the setting with the file data as JSON string
     await this.settingService.createOrUpdate(group, {
       [key]: JSON.stringify(fileData),
@@ -52,7 +52,12 @@ export class UploadService {
     }
 
     // Format PNG/JPG/SVG
-    const allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'];
+    const allowedMimeTypes = [
+      'image/png',
+      'image/jpeg',
+      'image/jpg',
+      'image/svg+xml',
+    ];
     if (!allowedMimeTypes.includes(file.mimetype)) {
       throw new BadRequestException('Logo must be PNG, JPG, or SVG');
     }
@@ -64,7 +69,7 @@ export class UploadService {
       if (metadata.width !== metadata.height) {
         throw new BadRequestException('Logo must have 1:1 aspect ratio');
       }
-      // Strict 200x200 check? User said "dimensi 200x200px". 
+      // Strict 200x200 check? User said "dimensi 200x200px".
       // Often strict equality is annoying, but requirement seems specific.
       // Let's allow slightly larger if aspect ratio is correct? No, "dimensi 200x200px" usually means that size.
       // Or maybe "max 200x200"? I'll enforce 200x200 or allow resizing?
@@ -72,7 +77,7 @@ export class UploadService {
       // "dimensi 200x200px" is also explicit.
       // I'll check width/height.
       if (metadata.width !== 200 || metadata.height !== 200) {
-         throw new BadRequestException('Logo dimensions must be 200x200px');
+        throw new BadRequestException('Logo dimensions must be 200x200px');
       }
     }
   }
@@ -84,7 +89,11 @@ export class UploadService {
     }
 
     // Format ICO/PNG
-    const allowedMimeTypes = ['image/x-icon', 'image/vnd.microsoft.icon', 'image/png'];
+    const allowedMimeTypes = [
+      'image/x-icon',
+      'image/vnd.microsoft.icon',
+      'image/png',
+    ];
     if (!allowedMimeTypes.includes(file.mimetype)) {
       throw new BadRequestException('Favicon must be ICO or PNG');
     }
@@ -94,8 +103,13 @@ export class UploadService {
     if (file.mimetype === 'image/png') {
       const metadata = await sharp(file.buffer).metadata();
       const validSizes = [32, 64];
-      if (!validSizes.includes(metadata.width || 0) || !validSizes.includes(metadata.height || 0)) {
-        throw new BadRequestException('Favicon dimensions must be 32x32px or 64x64px');
+      if (
+        !validSizes.includes(metadata.width || 0) ||
+        !validSizes.includes(metadata.height || 0)
+      ) {
+        throw new BadRequestException(
+          'Favicon dimensions must be 32x32px or 64x64px',
+        );
       }
       if (metadata.width !== metadata.height) {
         throw new BadRequestException('Favicon must be square');

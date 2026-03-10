@@ -11,18 +11,14 @@ export class InitializationMiddleware implements NestMiddleware {
     const isInitialized = await this.initializeService.isInitialized();
 
     if (!isInitialized) {
-      const errorResponse = toResponse(
-        null,
-        undefined,
-        undefined,
-        undefined,
-        [{
+      const errorResponse = toResponse(null, undefined, undefined, undefined, [
+        {
           status: '503',
           code: 'SYSTEM_NOT_INITIALIZED',
           title: 'Service Unavailable',
           detail: 'System is not initialized. Please configure settings first.',
-        }]
-      );
+        },
+      ]);
 
       return res.status(503).json(errorResponse);
     }

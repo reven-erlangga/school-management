@@ -1,0 +1,86 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tolgee-data
+  labels:
+    app: tolgee
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tolgee
+  labels:
+    app: tolgee
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tolgee
+  template:
+    metadata:
+      labels:
+        app: tolgee
+    spec:
+      containers:
+      - name: tolgee
+        image: tolgee/tolgee:v3.166.1
+        ports:
+        - name: http
+          containerPort: 8080
+        envFrom:
+        - configMapRef:
+            name: tolgee-config
+        - secretRef:
+            name: tolgee-secret
+        volumeMounts:
+        - name: tolgee-data
+          mountPath: /data
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 20
+          timeoutSeconds: 5
+          failureThreshold: 6
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "512Mi"
+          limits:
+            cpu: "1000m"
+            memory: "1Gi"
+      volumes:
+      - name: tolgee-data
+        persistentVolumeClaim:
+          claimName: tolgee-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tolgee
+  labels:
+    app: tolgee
+spec:
+  type: ClusterIP
+  selector:
+    app: tolgee
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 8080

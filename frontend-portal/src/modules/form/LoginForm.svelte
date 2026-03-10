@@ -1,9 +1,9 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { fade } from "svelte/transition";
-    import Button from "../../components/svelte/atoms/Button.svelte";
-    import Icon from "../../components/svelte/atoms/Icon.svelte";
-    import TextField from "../../components/svelte/atoms/TextField.svelte";
+    import Button from "@components/svelte/atoms/Button.svelte";
+    import Icon from "@components/svelte/atoms/Icon.svelte";
+    import TextField from "@components/svelte/atoms/TextField.svelte";
     import { login, form as loginForm, handleInput } from "../../store/auth";
 
     let mounted = $state(false);

@@ -1,0 +1,16 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tolgee-ingress
+spec:
+  rules:
+  - host: tolgee.dev.school-app.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: tolgee
+            port:
+              number: 80

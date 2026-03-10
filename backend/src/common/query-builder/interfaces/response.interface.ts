@@ -47,7 +47,7 @@ export interface Response<T = any> {
  * Helper to convert camelCase string to snake_case
  */
 const toSnakeCase = (str: string): string => {
-  return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+  return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
 };
 
 /**
@@ -55,8 +55,13 @@ const toSnakeCase = (str: string): string => {
  */
 const keysToSnakeCase = (obj: any): any => {
   if (Array.isArray(obj)) {
-    return obj.map(v => keysToSnakeCase(v));
-  } else if (obj !== null && typeof obj === 'object' && !(obj instanceof Date) && !(obj instanceof RegExp)) {
+    return obj.map((v) => keysToSnakeCase(v));
+  } else if (
+    obj !== null &&
+    typeof obj === 'object' &&
+    !(obj instanceof Date) &&
+    !(obj instanceof RegExp)
+  ) {
     return Object.keys(obj).reduce((result, key) => {
       const snakeKey = toSnakeCase(key);
       result[snakeKey] = keysToSnakeCase(obj[key]);
@@ -74,7 +79,7 @@ export function toResponse<T>(
   meta?: Meta,
   links?: Links,
   included?: any[],
-  errors?: ErrorObject[]
+  errors?: ErrorObject[],
 ): Response<T> {
   const metaWithTimestamp = {
     ...(meta || {}),

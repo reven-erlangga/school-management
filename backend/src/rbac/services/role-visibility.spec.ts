@@ -2,11 +2,11 @@ import { ModuleMeta } from '../interfaces/form-config.interface';
 
 describe('Form-based Button Visibility Validation', () => {
   const teacherMeta: ModuleMeta = {
-    form: { style: 'modal' }
+    form: { style: 'modal' },
   };
 
   const studentMeta: ModuleMeta = {
-    form: { style: 'step' }
+    form: { style: 'step' },
   };
 
   const instituteMeta: ModuleMeta = {};

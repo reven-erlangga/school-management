@@ -1,4 +1,12 @@
-import { IsNotEmpty, IsOptional, IsString, IsBoolean, IsEnum, IsDateString, IsArray } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsBoolean,
+  IsEnum,
+  IsDateString,
+  IsArray,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum BannerType {
@@ -17,7 +25,10 @@ export class CreateBannerDto {
   @IsOptional()
   title?: string;
 
-  @ApiProperty({ example: { url: 'https://...', alt: 'banner' }, description: 'JSON metadata for image' })
+  @ApiProperty({
+    example: { url: 'https://...', alt: 'banner' },
+    description: 'JSON metadata for image',
+  })
   @IsNotEmpty()
   image: any;
 
@@ -41,7 +52,11 @@ export class CreateBannerDto {
   @IsOptional()
   is_active?: boolean;
 
-  @ApiProperty({ example: ['inst-id-1', 'inst-id-2'], required: false, description: 'List of institute IDs if type is INSTITUTE' })
+  @ApiProperty({
+    example: ['inst-id-1', 'inst-id-2'],
+    required: false,
+    description: 'List of institute IDs if type is INSTITUTE',
+  })
   @IsArray()
   @IsOptional()
   institute_ids?: string[];

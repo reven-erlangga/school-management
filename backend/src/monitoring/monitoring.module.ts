@@ -9,7 +9,13 @@ import { CommonModule } from '../common/common.module';
 
 @Module({
   imports: [CommonModule],
-  controllers: [EnrollmentController, AttendanceController, FinanceController, GradingController, ShowcaseController],
-  providers: [ShowcaseService]
+  controllers: [
+    EnrollmentController,
+    AttendanceController,
+    FinanceController,
+    GradingController,
+    ShowcaseController,
+  ],
+  providers: [ShowcaseService],
 })
-export class MonitoringModule { }
+export class MonitoringModule {}

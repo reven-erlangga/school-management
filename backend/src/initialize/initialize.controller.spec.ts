@@ -1,7 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { InitializeController } from './initialize.controller';
 import { InitializeService } from './initialize.service';
-import { InitializationStatusEntity, SettingEntity } from './entities/setting.entity';
+import {
+  InitializationStatusEntity,
+  SettingEntity,
+} from './entities/setting.entity';
 
 describe('InitializeController', () => {
   let controller: InitializeController;
@@ -15,9 +18,7 @@ describe('InitializeController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [InitializeController],
-      providers: [
-        { provide: InitializeService, useValue: mockService },
-      ],
+      providers: [{ provide: InitializeService, useValue: mockService }],
     }).compile();
 
     controller = module.get<InitializeController>(InitializeController);

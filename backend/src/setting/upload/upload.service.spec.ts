@@ -73,7 +73,9 @@ describe('UploadService', () => {
 
   describe('handleUpload', () => {
     it('should throw error if file is missing', async () => {
-      await expect(service.handleUpload('general', 'logo', null)).rejects.toThrow(BadRequestException);
+      await expect(
+        service.handleUpload('general', 'logo', null),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should upload logo successfully', async () => {
@@ -84,36 +86,44 @@ describe('UploadService', () => {
 
     it('should validate logo size', async () => {
       const largeFile = { ...mockFile, size: 3 * 1024 * 1024 }; // 3MB
-      await expect(service.handleUpload('general', 'logo', largeFile)).rejects.toThrow(BadRequestException);
+      await expect(
+        service.handleUpload('general', 'logo', largeFile),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should validate logo dimensions', async () => {
-        (sharp as unknown as jest.Mock).mockImplementationOnce(() => ({
-            metadata: jest.fn().mockResolvedValue({ width: 300, height: 300 }), // Wrong size
-        }));
-        await expect(service.handleUpload('general', 'logo', mockFile)).rejects.toThrow(BadRequestException);
+      (sharp as unknown as jest.Mock).mockImplementationOnce(() => ({
+        metadata: jest.fn().mockResolvedValue({ width: 300, height: 300 }), // Wrong size
+      }));
+      await expect(
+        service.handleUpload('general', 'logo', mockFile),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should validate logo aspect ratio', async () => {
-        (sharp as unknown as jest.Mock).mockImplementationOnce(() => ({
-            metadata: jest.fn().mockResolvedValue({ width: 200, height: 100 }), // Not 1:1
-        }));
-        await expect(service.handleUpload('general', 'logo', mockFile)).rejects.toThrow(BadRequestException);
+      (sharp as unknown as jest.Mock).mockImplementationOnce(() => ({
+        metadata: jest.fn().mockResolvedValue({ width: 200, height: 100 }), // Not 1:1
+      }));
+      await expect(
+        service.handleUpload('general', 'logo', mockFile),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should upload favicon successfully', async () => {
-        (sharp as unknown as jest.Mock).mockImplementationOnce(() => ({
-            metadata: jest.fn().mockResolvedValue({ width: 32, height: 32 }),
-        }));
-        const result = await service.handleUpload('general', 'favicon', mockFile);
-        expect(result.data.url).toBe('http://localhost/test.png');
+      (sharp as unknown as jest.Mock).mockImplementationOnce(() => ({
+        metadata: jest.fn().mockResolvedValue({ width: 32, height: 32 }),
+      }));
+      const result = await service.handleUpload('general', 'favicon', mockFile);
+      expect(result.data.url).toBe('http://localhost/test.png');
     });
 
     it('should validate favicon dimensions', async () => {
-        (sharp as unknown as jest.Mock).mockImplementationOnce(() => ({
-            metadata: jest.fn().mockResolvedValue({ width: 100, height: 100 }), // Invalid size
-        }));
-        await expect(service.handleUpload('general', 'favicon', mockFile)).rejects.toThrow(BadRequestException);
+      (sharp as unknown as jest.Mock).mockImplementationOnce(() => ({
+        metadata: jest.fn().mockResolvedValue({ width: 100, height: 100 }), // Invalid size
+      }));
+      await expect(
+        service.handleUpload('general', 'favicon', mockFile),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });

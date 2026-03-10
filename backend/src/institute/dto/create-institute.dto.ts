@@ -1,4 +1,10 @@
-import { IsString, IsOptional, IsEnum, IsNotEmpty, ValidateIf } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsNotEmpty,
+  ValidateIf,
+} from 'class-validator';
 
 export class CreateInstituteDto {
   // Step 1: General
@@ -40,37 +46,37 @@ export class CreateInstituteDto {
   @IsNotEmpty()
   accountType: 'existing' | 'new';
 
-  @ValidateIf(o => o.accountType === 'existing')
+  @ValidateIf((o) => o.accountType === 'existing')
   @IsString()
   @IsNotEmpty()
   existingAdminId?: string;
 
-  @ValidateIf(o => o.accountType === 'new')
+  @ValidateIf((o) => o.accountType === 'new')
   @IsString()
   @IsNotEmpty()
   adminFullName?: string;
 
-  @ValidateIf(o => o.accountType === 'new')
+  @ValidateIf((o) => o.accountType === 'new')
   @IsString()
   @IsNotEmpty()
   adminEmail?: string;
 
-  @ValidateIf(o => o.accountType === 'new')
+  @ValidateIf((o) => o.accountType === 'new')
   @IsString()
   @IsNotEmpty()
   adminPhone?: string;
 
-  @ValidateIf(o => o.accountType === 'new')
+  @ValidateIf((o) => o.accountType === 'new')
   @IsString()
   @IsOptional()
   ethnicity?: string;
 
-  @ValidateIf(o => o.accountType === 'new')
+  @ValidateIf((o) => o.accountType === 'new')
   @IsString()
   @IsOptional()
   religion?: string;
 
-  @ValidateIf(o => o.accountType === 'new')
+  @ValidateIf((o) => o.accountType === 'new')
   @IsString()
   @IsOptional()
   identityNumber?: string;

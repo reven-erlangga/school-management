@@ -1,6 +1,6 @@
 <script lang="ts">
-  import Icon from '../atoms/Icon.svelte';
-  import Button from '../atoms/Button.svelte';
+  import Icon from '@components/svelte/atoms/Icon.svelte';
+  import Button from '@components/svelte/atoms/Button.svelte';
   import { fade } from 'svelte/transition';
   import { t } from '@utils/translation.util';
   import type { Module } from '../../../types/rbac';

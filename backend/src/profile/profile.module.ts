@@ -5,8 +5,8 @@ import { ProfileService } from './profile.service';
 import { ProfileController } from './profile.controller';
 
 @Module({
-    controllers: [NotificationController, ProfileController],
-    providers: [NotificationService, ProfileService],
-    exports: [NotificationService],
+  controllers: [NotificationController, ProfileController],
+  providers: [NotificationService, ProfileService],
+  exports: [NotificationService],
 })
-export class ProfileModule { }
+export class ProfileModule {}

@@ -9,7 +9,11 @@ import { QueryBuilderModule } from '../common/query-builder/query-builder.module
 import { VaultModule } from '../common/vault/vault.module';
 
 @Module({
-  imports: [InitializeModule, QueryBuilderModule, forwardRef(() => VaultModule)],
+  imports: [
+    InitializeModule,
+    QueryBuilderModule,
+    forwardRef(() => VaultModule),
+  ],
   controllers: [SettingController, UploadController],
   providers: [SettingService, UploadService],
   exports: [SettingService],

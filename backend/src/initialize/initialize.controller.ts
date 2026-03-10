@@ -1,7 +1,10 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { InitializeService } from './initialize.service';
-import { InitializationStatusEntity, SettingEntity } from './entities/setting.entity';
+import {
+  InitializationStatusEntity,
+  SettingEntity,
+} from './entities/setting.entity';
 import { toResponse } from '../common/query-builder/interfaces/response.interface';
 
 @ApiTags('Initialize')

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { CreateGenderDto } from './dto/create-gender.dto';
 import { UpdateGenderDto } from './dto/update-gender.dto';
@@ -21,14 +25,18 @@ export class GenderService {
     });
 
     if (existing) {
-      throw new ConflictException(`Gender with key ${createGenderDto.key} already exists`);
+      throw new ConflictException(
+        `Gender with key ${createGenderDto.key} already exists`,
+      );
     }
 
     const gender = await (this.prisma as any).gender.create({
       data: {
         key: createGenderDto.key,
         name: JSON.stringify(createGenderDto.name),
-        description: createGenderDto.description ? JSON.stringify(createGenderDto.description) : null,
+        description: createGenderDto.description
+          ? JSON.stringify(createGenderDto.description)
+          : null,
       },
     });
 
@@ -103,7 +111,8 @@ export class GenderService {
     const data: any = {};
     if (updateGenderDto.key) data.key = updateGenderDto.key;
     if (updateGenderDto.name) data.name = JSON.stringify(updateGenderDto.name);
-    if (updateGenderDto.description) data.description = JSON.stringify(updateGenderDto.description);
+    if (updateGenderDto.description)
+      data.description = JSON.stringify(updateGenderDto.description);
 
     const updated = await (this.prisma as any).gender.update({
       where: { id },

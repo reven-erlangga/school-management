@@ -21,10 +21,12 @@ async function bootstrap() {
   });
 
   // Validation
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    transform: true,
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }),
+  );
 
   // Swagger setup
   const config = new DocumentBuilder()
@@ -36,6 +38,6 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app as any, config);
   SwaggerModule.setup('api/docs', app as any, document);
 
-  await app.listen(process.env.PORT ?? 3001);
+  await app.listen(process.env.PORT ?? 3001, '0.0.0.0');
 }
 bootstrap();

@@ -12,7 +12,11 @@ export class CreateReligionDto {
   @IsNotEmpty()
   name: string;
 
-  @ApiProperty({ example: 'Islam religion', description: 'Description of the religion', required: false })
+  @ApiProperty({
+    example: 'Islam religion',
+    description: 'Description of the religion',
+    required: false,
+  })
   @IsString()
   @IsOptional()
   description?: string;

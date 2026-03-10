@@ -7,7 +7,7 @@
   import QuickActionPanel from '../../molecules/QuickActionPanel.svelte';
   import UserProfilePanel from '../../molecules/UserProfilePanel.svelte';
   import LanguageSwitch from '../../molecules/LanguageSwitch.svelte';
-  import ThemeSwitch from '../../molecules/ThemeSwitch.svelte';
+  import Theme from '@modules/theme/Index.svelte';
   import { onMount } from 'svelte';
 
   interface User {
@@ -174,7 +174,7 @@
       <LanguageSwitch />
 
       <!-- Theme Switch -->
-      <ThemeSwitch {theme} {onThemeChange} />
+      <Theme />
 
       <!-- Notifications -->
       <Button 

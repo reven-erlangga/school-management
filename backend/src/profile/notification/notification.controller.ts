@@ -1,4 +1,12 @@
-import { Controller, Get, Query, Put, Param, Req, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  Put,
+  Param,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { NotificationService } from './notification.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 
@@ -13,7 +21,11 @@ export class NotificationController {
     @Query('cursor') cursor?: string,
     @Query('limit') limit?: number,
   ) {
-    return this.notificationService.getUserNotifications(req.user.id, cursor, limit ? Number(limit) : 10);
+    return this.notificationService.getUserNotifications(
+      req.user.id,
+      cursor,
+      limit ? Number(limit) : 10,
+    );
   }
 
   @Get('count')

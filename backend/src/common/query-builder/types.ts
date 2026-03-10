@@ -2,7 +2,9 @@ export interface QueryOptions {
   table: string;
   select?: string | string[];
   where?: Record<string, any>;
-  orderBy?: Record<string, 'asc' | 'desc'> | Array<Record<string, 'asc' | 'desc'>>;
+  orderBy?:
+    | Record<string, 'asc' | 'desc'>
+    | Array<Record<string, 'asc' | 'desc'>>;
   limit?: number;
   offset?: number;
   returning?: boolean;

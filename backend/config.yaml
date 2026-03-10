@@ -1,0 +1,4 @@
+container:
+  registry: ghcr.io
+  repository: reven-erlangga/school-management/backend
+  tag: dev

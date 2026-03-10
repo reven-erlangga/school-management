@@ -38,6 +38,12 @@ export class Institute {
   }
 
   static get allowedIncludes() {
-    return ['units', 'streams', 'bannerInstitutes', 'staffInstitutes', 'staffInstitutes.staff'];
+    return [
+      'units',
+      'streams',
+      'bannerInstitutes',
+      'staffInstitutes',
+      'staffInstitutes.staff',
+    ];
   }
 }

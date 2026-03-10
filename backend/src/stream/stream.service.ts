@@ -12,7 +12,12 @@ export class StreamService {
     });
   }
 
-  async findAll(query: { page?: number; limit?: number; name?: string; institute_id?: string }) {
+  async findAll(query: {
+    page?: number;
+    limit?: number;
+    name?: string;
+    institute_id?: string;
+  }) {
     const page = Number(query.page) || 1;
     const limit = Number(query.limit) || 10;
     const skip = (page - 1) * limit;

@@ -1,9 +1,11 @@
 ---
-import Layout from "../layouts/Layout.astro";
-import SetupPage from "../components/svelte/pages/SetupPage.svelte";
+import AccessNavbar from "@components/svelte/organisms/AccessNavbar.svelte";
+import SetupPage from "../modules/setup/Index.svelte";
+import AccessLayout from "@layouts/AccessLayout.astro";
 ---
 
-<Layout title="Setup | Admin Portal">
-  <SetupPage client:load />
-  </Layout>
+<AccessLayout title="Setup | Admin Portal">
+  <AccessNavbar client:load />
 
+  <SetupPage client:load />
+</AccessLayout>

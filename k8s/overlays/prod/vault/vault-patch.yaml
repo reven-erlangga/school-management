@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vault
+spec:
+  template:
+    spec:
+      containers:
+      - name: vault
+        args:
+          - "server"
+          - "-config=/vault/config/vault.hcl"
+        volumeMounts:
+          - name: vault-config
+            mountPath: /vault/config
+          - name: vault-data
+            mountPath: /vault/data
+      volumes:
+        - name: vault-config
+          configMap:
+            name: vault-config
+        - name: vault-data
+          persistentVolumeClaim:
+            claimName: vault-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vault
+spec:
+  type: ClusterIP

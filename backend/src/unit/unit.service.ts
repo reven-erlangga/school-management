@@ -31,9 +31,7 @@ export class UnitService {
     if (query.search) {
       prismaQuery.where = {
         ...prismaQuery.where,
-        OR: [
-          { name: { contains: query.search, mode: 'insensitive' } },
-        ],
+        OR: [{ name: { contains: query.search, mode: 'insensitive' } }],
       };
     }
 

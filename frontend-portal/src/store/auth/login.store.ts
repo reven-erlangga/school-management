@@ -3,7 +3,7 @@ import type { Form, LoginRequest } from '../../types/auth.type';
 import { loginSchema } from '../../types/auth.type';
 import { authService } from '../../services/auth.service';
 import { user, saveAuthData } from './index';
-import { snackbar } from '../snackbar.store';
+import { snackbar } from '../../modules/snackbar/stores/control.store';
 import * as yup from 'yup';
 
 // Login form state

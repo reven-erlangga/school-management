@@ -29,9 +29,12 @@ export class TranslationController {
   })
   async getTranslations(
     @Param('lang') lang: string,
-    @Headers('X-App-Type') appType: string = 'landing'
+    @Headers('X-App-Type') appType: string = 'landing',
   ) {
-    const translations = await this.translationService.getTranslations(lang, appType);
+    const translations = await this.translationService.getTranslations(
+      lang,
+      appType,
+    );
     return toResponse(translations);
   }
 }

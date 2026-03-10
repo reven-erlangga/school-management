@@ -6,8 +6,16 @@ import { QueryBuilder } from '../common/query-builder/QueryBuilder';
 @Injectable()
 export class SettingService {
   private readonly algorithm = 'aes-256-cbc';
-  private readonly key = crypto.scryptSync(process.env.ENCRYPTION_KEY || 'default-secret-key', 'salt', 32);
-  private readonly iv = crypto.scryptSync(process.env.ENCRYPTION_IV || 'default-iv-secret', 'salt', 16);
+  private readonly key = crypto.scryptSync(
+    process.env.ENCRYPTION_KEY || 'default-secret-key',
+    'salt',
+    32,
+  );
+  private readonly iv = crypto.scryptSync(
+    process.env.ENCRYPTION_IV || 'default-iv-secret',
+    'salt',
+    16,
+  );
 
   private readonly sensitiveKeys = [
     'password',
@@ -20,8 +28,8 @@ export class SettingService {
 
   constructor(
     private queryBuilder: QueryBuilder,
-    private initializeService: InitializeService
-  ) { }
+    private initializeService: InitializeService,
+  ) {}
 
   private encrypt(text: string): string {
     const cipher = crypto.createCipheriv(this.algorithm, this.key, this.iv);
@@ -32,7 +40,11 @@ export class SettingService {
 
   private decrypt(encryptedText: string): string {
     try {
-      const decipher = crypto.createDecipheriv(this.algorithm, this.key, this.iv);
+      const decipher = crypto.createDecipheriv(
+        this.algorithm,
+        this.key,
+        this.iv,
+      );
       let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
       decrypted += decipher.final('utf8');
       return decrypted;
@@ -56,7 +68,8 @@ export class SettingService {
     const result: Record<string, any> = {};
     settings.forEach((s: any) => {
       let value = s.value;
-      const isActuallySensitive = s.is_sensitive || this.sensitiveKeys.includes(s.key);
+      const isActuallySensitive =
+        s.is_sensitive || this.sensitiveKeys.includes(s.key);
 
       if (isActuallySensitive && value) {
         // If it's marked as sensitive but we get it from DB, we should decrypt if possible
@@ -103,7 +116,10 @@ export class SettingService {
       table: 'setting',
       where: { group: type },
       limit: options?.limit,
-      offset: options?.page && options?.limit ? (options.page - 1) * options.limit : undefined,
+      offset:
+        options?.page && options?.limit
+          ? (options.page - 1) * options.limit
+          : undefined,
     });
   }
 
@@ -115,7 +131,8 @@ export class SettingService {
       }
 
       const isSensitive = this.sensitiveKeys.includes(key);
-      let finalValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
+      let finalValue =
+        typeof value === 'object' ? JSON.stringify(value) : String(value);
 
       if (isSensitive) {
         // If it's a masked value (ends with ****), skip updating to preserve original
@@ -158,7 +175,10 @@ export class SettingService {
     const settings = await this.getInternalByGroup('vault');
     return {
       // Prioritize environment variables over database settings
-      address: process.env.VAULT_ADDR || settings['vault_address'] || 'http://vault:8200',
+      address:
+        process.env.VAULT_ADDR ||
+        settings['vault_address'] ||
+        'http://vault:8200',
       token: process.env.VAULT_TOKEN || settings['vault_token'],
     };
   }

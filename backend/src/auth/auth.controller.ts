@@ -1,4 +1,12 @@
-import { Controller, Post, Body, UnauthorizedException, Get, Header, Headers } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UnauthorizedException,
+  Get,
+  Header,
+  Headers,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthEntity } from './entities/auth.entity';
 import { toResponse } from '../common/query-builder/interfaces/response.interface';
@@ -11,7 +19,11 @@ export class AuthController {
 
   @Post('login')
   @ApiOperation({ summary: 'Login user and return tokens' })
-  @ApiResponse({ status: 200, description: 'Return access and refresh tokens', type: AuthEntity })
+  @ApiResponse({
+    status: 200,
+    description: 'Return access and refresh tokens',
+    type: AuthEntity,
+  })
   async login(@Body() body: any) {
     const result = await this.authService.login(body.username, body.password);
     console.log('[AuthController] Login result:', toResponse(result));
@@ -20,7 +32,11 @@ export class AuthController {
 
   @Post('refresh')
   @ApiOperation({ summary: 'Refresh access token' })
-  @ApiResponse({ status: 200, description: 'Return new access and refresh tokens', type: AuthEntity })
+  @ApiResponse({
+    status: 200,
+    description: 'Return new access and refresh tokens',
+    type: AuthEntity,
+  })
   async refresh(@Body('refreshToken') token: string) {
     if (!token) throw new UnauthorizedException('Refresh token is required');
     const result = await this.authService.refreshToken(token);

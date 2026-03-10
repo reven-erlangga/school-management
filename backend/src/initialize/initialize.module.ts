@@ -5,6 +5,6 @@ import { InitializeService } from './initialize.service';
 @Module({
   controllers: [InitializeController],
   providers: [InitializeService],
-  exports: [InitializeService]
+  exports: [InitializeService],
 })
 export class InitializeModule {}

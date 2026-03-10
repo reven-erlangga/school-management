@@ -1,6 +1,18 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { InstituteService } from './institute.service';
-import { CreateInstituteDto, UpdateInstituteDto } from './dto/create-institute.dto';
+import {
+  CreateInstituteDto,
+  UpdateInstituteDto,
+} from './dto/create-institute.dto';
 import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { QueryParams } from '../common/query-builder/interfaces/query-params.interface';
 
@@ -35,7 +47,10 @@ export class InstituteController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update an institute by ID' })
-  update(@Param('id') id: string, @Body() updateInstituteDto: UpdateInstituteDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateInstituteDto: UpdateInstituteDto,
+  ) {
     return this.instituteService.update(id, updateInstituteDto);
   }
 

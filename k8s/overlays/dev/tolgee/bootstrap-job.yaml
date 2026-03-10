@@ -1,0 +1,44 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: tolgee-bootstrap
+spec:
+  ttlSecondsAfterFinished: 3600
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: Never
+      serviceAccountName: tolgee-bootstrap
+      containers:
+      - name: bootstrap
+        image: alpine:3.19
+        command: ["/bin/sh","-c"]
+        args:
+        - apk add --no-cache curl jq && /bin/sh /scripts/bootstrap.sh
+        env:
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: TOLGEE_URL
+          value: http://tolgee
+        - name: VAULT_ADDR
+          value: http://vault:8200
+        - name: VAULT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: vault-secret
+              key: root-token
+        envFrom:
+        - configMapRef:
+            name: tolgee-config
+        - secretRef:
+            name: tolgee-secret
+        volumeMounts:
+        - name: script
+          mountPath: /scripts
+          readOnly: true
+      volumes:
+      - name: script
+        configMap:
+          name: tolgee-bootstrap-script

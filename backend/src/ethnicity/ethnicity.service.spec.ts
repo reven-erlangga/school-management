@@ -85,8 +85,15 @@ describe('EthnicityService', () => {
   describe('update', () => {
     it('should update an ethnicity', async () => {
       const dto = { name: 'Updated' };
-      mockPrisma.ethnicity.findUnique.mockResolvedValue({ id: '1', key: 'java' });
-      mockPrisma.ethnicity.update.mockResolvedValue({ id: '1', key: 'java', ...dto });
+      mockPrisma.ethnicity.findUnique.mockResolvedValue({
+        id: '1',
+        key: 'java',
+      });
+      mockPrisma.ethnicity.update.mockResolvedValue({
+        id: '1',
+        key: 'java',
+        ...dto,
+      });
 
       const result = await service.update('1', dto);
       expect(result.name).toBe('Updated');

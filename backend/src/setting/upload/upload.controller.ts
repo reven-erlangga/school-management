@@ -1,4 +1,12 @@
-import { Controller, Post, Param, UploadedFile, UseInterceptors, ParseFilePipe, MaxFileSizeValidator } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Param,
+  UploadedFile,
+  UseInterceptors,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadService } from './upload.service';
 import { ApiConsumes, ApiBody, ApiTags } from '@nestjs/swagger';
@@ -22,12 +30,14 @@ export class UploadController {
       },
     },
   })
-  @UseInterceptors(FileInterceptor('file', {
-    storage: memoryStorage(), // Use memory storage to get buffer
-  }))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(), // Use memory storage to get buffer
+    }),
+  )
   async uploadLogo(
-    @Param('group') group: string, 
-    @UploadedFile() file: Express.Multer.File
+    @Param('group') group: string,
+    @UploadedFile() file: Express.Multer.File,
   ) {
     return this.uploadService.handleUpload(group, 'logo', file);
   }
@@ -45,12 +55,14 @@ export class UploadController {
       },
     },
   })
-  @UseInterceptors(FileInterceptor('file', {
-    storage: memoryStorage(), // Use memory storage to get buffer
-  }))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(), // Use memory storage to get buffer
+    }),
+  )
   async uploadFavicon(
-    @Param('group') group: string, 
-    @UploadedFile() file: Express.Multer.File
+    @Param('group') group: string,
+    @UploadedFile() file: Express.Multer.File,
   ) {
     return this.uploadService.handleUpload(group, 'favicon', file);
   }

@@ -9,7 +9,21 @@ import { VaultModule } from './vault/vault.module';
 
 @Global()
 @Module({
-  imports: [PrismaModule, QueryBuilderModule, AssetModule, RedisModule, MinioModule, SeederModule, VaultModule],
-  exports: [PrismaModule, QueryBuilderModule, RedisModule, MinioModule, VaultModule],
+  imports: [
+    PrismaModule,
+    QueryBuilderModule,
+    AssetModule,
+    RedisModule,
+    MinioModule,
+    SeederModule,
+    VaultModule,
+  ],
+  exports: [
+    PrismaModule,
+    QueryBuilderModule,
+    RedisModule,
+    MinioModule,
+    VaultModule,
+  ],
 })
-export class CommonModule { }
+export class CommonModule {}

@@ -5,6 +5,8 @@ import { SeederService } from './seeder.service';
 import { SeederController } from './seeder.controller';
 import { SeederProcessor } from './seeder.processor';
 import { queueConfig, SEEDER_QUEUE } from './queue/queue.config';
+import { GeographicalService } from './geographical/geographical.service';
+import { TranslationService } from './translation/translation.service';
 
 @Module({
   imports: [
@@ -27,7 +29,12 @@ import { queueConfig, SEEDER_QUEUE } from './queue/queue.config';
     }),
   ],
   controllers: [SeederController],
-  providers: [SeederService, SeederProcessor],
+  providers: [
+    SeederService,
+    SeederProcessor,
+    GeographicalService,
+    TranslationService,
+  ],
   exports: [SeederService],
 })
 export class SeederModule {}

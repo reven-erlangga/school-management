@@ -1,0 +1,16 @@
+{
+  "title": "Portal Manajemen Sekolah",
+  "login": {
+    "title": "Masuk",
+    "email": "Email",
+    "password": "Kata sandi",
+    "submit": "Masuk"
+  },
+  "dashboard": {
+    "title": "Dasbor",
+    "students": "Siswa",
+    "teachers": "Guru",
+    "classes": "Kelas",
+    "subjects": "Mata Pelajaran"
+  }
+}

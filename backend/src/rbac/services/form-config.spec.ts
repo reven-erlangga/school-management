@@ -7,15 +7,24 @@ describe('Form Configuration Validation', () => {
       title: 'Add New Teacher',
       subtitle: 'Fill in the information',
       content: [
-        { type: 'textfield', label: 'Full Name', placeholder: 'Enter full name', validation: { required: true } },
-        { type: 'dropdown', label: 'Subject', options: [{ label: 'Math', value: 'math' }] }
+        {
+          type: 'textfield',
+          label: 'Full Name',
+          placeholder: 'Enter full name',
+          validation: { required: true },
+        },
+        {
+          type: 'dropdown',
+          label: 'Subject',
+          options: [{ label: 'Math', value: 'math' }],
+        },
       ],
       condition: {
         status: 'success',
         showAfter: 2000,
         feedbackType: 'toast message',
-        message: 'Success!'
-      }
+        message: 'Success!',
+      },
     };
 
     expect(teacherForm.style).toBe('modal');
@@ -29,8 +38,8 @@ describe('Form Configuration Validation', () => {
       title: 'Enroll New Student',
       content: [
         { type: 'textfield', label: 'First Name' },
-        { type: 'file', label: 'Documents' }
-      ]
+        { type: 'file', label: 'Documents' },
+      ],
     };
 
     expect(studentForm.style).toBe('step');
@@ -39,7 +48,7 @@ describe('Form Configuration Validation', () => {
 
   it('should handle optional fields gracefully', () => {
     const minimalForm: FormConfig = {
-      content: [{ type: 'textfield' }]
+      content: [{ type: 'textfield' }],
     };
 
     expect(minimalForm.style).toBeUndefined();
@@ -49,7 +58,7 @@ describe('Form Configuration Validation', () => {
 
   it('should validate ModuleMeta with form', () => {
     const teacherMeta: ModuleMeta = {
-      form: { style: 'modal' }
+      form: { style: 'modal' },
     };
 
     const instituteMeta: ModuleMeta = {};

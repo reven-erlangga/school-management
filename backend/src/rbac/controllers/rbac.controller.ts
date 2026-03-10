@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Param, Delete, Put, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { RbacService } from '../services/rbac.service';
 import { RbacSeederService } from '../services/rbac-seeder.service';
@@ -100,7 +109,10 @@ export class RbacController {
 
   @Put('roles/:id/permissions')
   @ApiOperation({ summary: 'Assign permissions to a role' })
-  assignPermissions(@Param('id') id: string, @Body('permission_ids') permissionIds: string[]) {
+  assignPermissions(
+    @Param('id') id: string,
+    @Body('permission_ids') permissionIds: string[],
+  ) {
     return this.rbacService.assignPermissionsToRole(id, permissionIds);
   }
 }

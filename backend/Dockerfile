@@ -1,6 +1,11 @@
 # Stage 1: Builder
 FROM node:20-alpine AS builder
 
+ENV NPM_CONFIG_UPDATE_NOTIFIER=false \
+    NPM_CONFIG_FUND=false \
+    NPM_CONFIG_AUDIT=false \
+    NPM_CONFIG_LOGLEVEL=error
+
 # Install dependencies required for building (if any native modules or prisma engines)
 RUN apk add --no-cache libc6-compat
 
@@ -17,7 +22,7 @@ RUN grep 'provider = "postgresql"' prisma/schema.prisma || (cat prisma/schema.pr
 COPY tsconfig*.json ./
 
 # Install all dependencies (including devDependencies)
-RUN npm ci
+RUN npm ci --loglevel=error
 
 # Generate Prisma Client (required for the build)
 RUN npx prisma generate --schema=prisma/schema.prisma
@@ -35,6 +40,10 @@ WORKDIR /app
 
 # Set environment to production
 ENV NODE_ENV=production
+ENV NPM_CONFIG_UPDATE_NOTIFIER=false \
+    NPM_CONFIG_FUND=false \
+    NPM_CONFIG_AUDIT=false \
+    NPM_CONFIG_LOGLEVEL=error
 
 # Install curl/wget for healthchecks if needed (optional, node:alpine has wget)
 # RUN apk add --no-cache curl
@@ -47,7 +56,7 @@ ENV NODE_ENV=production
 COPY package*.json ./
 
 # Install only production dependencies
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci --only=production --loglevel=error && npm cache clean --force
 
 # Install ffmpeg for video compression
 RUN apk add --no-cache ffmpeg
@@ -55,6 +64,7 @@ RUN apk add --no-cache ffmpeg
 # Copy built assets from builder stage
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/assets ./assets
 
 # Copy prisma client and schema (schema is often needed for engine validation or migrations)
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma

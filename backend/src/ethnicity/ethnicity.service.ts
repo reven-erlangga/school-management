@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { CreateEthnicityDto } from './dto/create-ethnicity.dto';
 import { UpdateEthnicityDto } from './dto/update-ethnicity.dto';
@@ -21,7 +25,9 @@ export class EthnicityService {
     });
 
     if (existing) {
-      throw new ConflictException(`Ethnicity with key ${createEthnicityDto.key} already exists`);
+      throw new ConflictException(
+        `Ethnicity with key ${createEthnicityDto.key} already exists`,
+      );
     }
 
     return (this.prisma as any).ethnicity.create({

@@ -3,11 +3,13 @@ import { QueryBuilderService } from '../../common/query-builder/query-builder.se
 
 @Injectable()
 export class NotificationService {
-  constructor(
-    private readonly queryBuilder: QueryBuilderService,
-  ) {}
+  constructor(private readonly queryBuilder: QueryBuilderService) {}
 
-  async getUserNotifications(userId: String, cursor?: String, limit: number = 10) {
+  async getUserNotifications(
+    userId: string,
+    cursor?: string,
+    limit: number = 10,
+  ) {
     const notifications = await this.queryBuilder
       .using('notification', {
         filter: { user_id: userId },
@@ -34,13 +36,13 @@ export class NotificationService {
     };
   }
 
-  async countUnreadNotifications(userId: String) {
+  async countUnreadNotifications(userId: string) {
     const count = await this.queryBuilder
       .using('notification', {
-        filter: { 
+        filter: {
           user_id: userId,
-          is_read: false 
-        }
+          is_read: false,
+        },
       })
       .allowedFilters(['user_id', 'is_read'])
       .count();
@@ -48,32 +50,32 @@ export class NotificationService {
     return { count };
   }
 
-  async markAsRead(userId: String, notificationId: String) {
+  async markAsRead(userId: string, notificationId: string) {
     // We use using() just to set the model name, though update() primarily uses id
     // However, for security we might want to verify ownership if update() supported complex where
     // But our simple update(id, data) only takes ID.
     // If strict ownership check is needed, we should probably fetch first or use updateMany with user_id.
     // Given the simple implementation of update(id, data), it directly updates by ID.
     // To ensure user owns the notification, let's use updateMany with id AND user_id
-    
+
     return this.queryBuilder
       .using('notification', {
         filter: {
           id: notificationId,
-          user_id: userId
-        }
+          user_id: userId,
+        },
       })
       .allowedFilters(['id', 'user_id'])
       .updateMany({ is_read: true });
   }
 
-  async markAllAsRead(userId: String) {
+  async markAllAsRead(userId: string) {
     return this.queryBuilder
       .using('notification', {
         filter: {
           user_id: userId,
-          is_read: false
-        }
+          is_read: false,
+        },
       })
       .allowedFilters(['user_id', 'is_read'])
       .updateMany({

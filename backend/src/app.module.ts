@@ -28,6 +28,7 @@ import { TranslationService } from './translation/translation.service';
 import { ProfileModule } from './profile/profile.module';
 import { CaslModule } from './common/casl/casl.module';
 import { InitializeModule } from './initialize/initialize.module';
+import { CountryModule } from './country/country.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { InitializeModule } from './initialize/initialize.module';
     BannerModule,
     ProfileModule,
     InitializeModule,
+    CountryModule,
   ],
   controllers: [AppController, DemographicsController, TranslationController],
   providers: [AppService, DemographicsService, TranslationService],
@@ -69,6 +71,7 @@ export class AppModule {
         { path: 'docs/(.*)', method: RequestMethod.ALL },
         { path: 'settings/(.*)', method: RequestMethod.ALL },
         { path: 'settings', method: RequestMethod.ALL },
+        { path: 'api/health', method: RequestMethod.ALL },
       )
       .forRoutes('*');
   }

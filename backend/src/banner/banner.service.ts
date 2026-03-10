@@ -14,55 +14,60 @@ export class BannerService {
       data: {
         ...bannerData,
         image: JSON.stringify(image),
-        bannerInstitutes: institute_ids && institute_ids.length > 0 
-          ? {
-              create: institute_ids.map(id => ({ institute_id: id }))
-            }
-          : undefined
+        bannerInstitutes:
+          institute_ids && institute_ids.length > 0
+            ? {
+                create: institute_ids.map((id) => ({ institute_id: id })),
+              }
+            : undefined,
       },
-      include: { bannerInstitutes: true }
+      include: { bannerInstitutes: true },
     });
   }
 
-  async findAll(query: { type?: BannerType; institute_id?: string; is_active?: boolean }) {
+  async findAll(query: {
+    type?: BannerType;
+    institute_id?: string;
+    is_active?: boolean;
+  }) {
     const where: any = {};
     if (query.type) where.type = query.type;
     if (query.is_active !== undefined) where.is_active = query.is_active;
-    
+
     if (query.institute_id) {
       where.OR = [
         { type: BannerType.GENERAL },
         {
           bannerInstitutes: {
-            some: { institute_id: query.institute_id }
-          }
-        }
+            some: { institute_id: query.institute_id },
+          },
+        },
       ];
     }
 
     const banners = await (this.prisma as any).banner.findMany({
       where,
       include: { bannerInstitutes: true },
-      orderBy: { created_at: 'desc' }
+      orderBy: { created_at: 'desc' },
     });
 
     return banners.map((b: any) => ({
       ...b,
-      image: JSON.parse(b.image)
+      image: JSON.parse(b.image),
     }));
   }
 
   async findOne(id: string) {
     const banner = await (this.prisma as any).banner.findUnique({
       where: { id },
-      include: { bannerInstitutes: true }
+      include: { bannerInstitutes: true },
     });
 
     if (!banner) throw new NotFoundException('Banner not found');
 
     return {
       ...banner,
-      image: JSON.parse(banner.image)
+      image: JSON.parse(banner.image),
     };
   }
 
@@ -71,7 +76,9 @@ export class BannerService {
 
     // First delete existing relations if new ones are provided
     if (institute_ids) {
-      await (this.prisma as any).bannerInstitute.deleteMany({ where: { banner_id: id } });
+      await (this.prisma as any).bannerInstitute.deleteMany({
+        where: { banner_id: id },
+      });
     }
 
     const updated = await (this.prisma as any).banner.update({
@@ -79,18 +86,19 @@ export class BannerService {
       data: {
         ...bannerData,
         image: image ? JSON.stringify(image) : undefined,
-        bannerInstitutes: institute_ids && institute_ids.length > 0
-          ? {
-              create: institute_ids.map(id => ({ institute_id: id }))
-            }
-          : undefined
+        bannerInstitutes:
+          institute_ids && institute_ids.length > 0
+            ? {
+                create: institute_ids.map((id) => ({ institute_id: id })),
+              }
+            : undefined,
       },
-      include: { bannerInstitutes: true }
+      include: { bannerInstitutes: true },
     });
 
     return {
       ...updated,
-      image: JSON.parse(updated.image)
+      image: JSON.parse(updated.image),
     };
   }
 

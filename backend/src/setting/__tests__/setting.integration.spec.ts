@@ -21,13 +21,13 @@ describe('SettingService Integration', () => {
         ConfigService,
         QueryBuilder,
         {
-           provide: RedisService, 
-           useValue: {
-               get: jest.fn(),
-               set: jest.fn(),
-               reset: jest.fn(),
-           }
-        }
+          provide: RedisService,
+          useValue: {
+            get: jest.fn(),
+            set: jest.fn(),
+            reset: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -58,10 +58,10 @@ describe('SettingService Integration', () => {
 
     // Retrieve
     const retrieved = await service.findByGroup(group);
-    
+
     expect(retrieved.site_name).toBe('Test School');
     expect(retrieved.site_url).toBe('http://test.com');
-    // sensitive_value should be masked because 'secret_key' isn't in the default sensitive list, 
+    // sensitive_value should be masked because 'secret_key' isn't in the default sensitive list,
     // BUT we can check if it was stored.
     // Let's add a sensitive key test
   });
@@ -85,13 +85,13 @@ describe('SettingService Integration', () => {
   });
 
   it('should find by key', async () => {
-      const result = await service.findByKey('site_name');
-      // Since we created it in previous test
-      // Note: key is unique per group, but 'key' column itself might not be unique globally? 
-      // Schema definition: @@id([group, key]) usually.
-      // If findByKey uses 'key' in where, it might return multiple if different groups use same key.
-      // But SettingService.findByKey returns first one.
-      expect(result).toBeDefined();
-      expect(result.key).toBe('site_name');
+    const result = await service.findByKey('site_name');
+    // Since we created it in previous test
+    // Note: key is unique per group, but 'key' column itself might not be unique globally?
+    // Schema definition: @@id([group, key]) usually.
+    // If findByKey uses 'key' in where, it might return multiple if different groups use same key.
+    // But SettingService.findByKey returns first one.
+    expect(result).toBeDefined();
+    expect(result.key).toBe('site_name');
   });
 });

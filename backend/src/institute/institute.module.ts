@@ -9,7 +9,12 @@ import { StudentService } from './student/student.service';
 import { StaffService } from './staff/staff.service';
 
 @Module({
-  controllers: [InstituteController, TeacherController, StudentController, StaffController],
+  controllers: [
+    InstituteController,
+    TeacherController,
+    StudentController,
+    StaffController,
+  ],
   providers: [InstituteService, TeacherService, StudentService, StaffService],
   exports: [InstituteService, TeacherService, StudentService, StaffService],
 })

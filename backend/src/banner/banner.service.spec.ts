@@ -77,7 +77,11 @@ describe('BannerService', () => {
   describe('findAll', () => {
     it('should return all banners', async () => {
       mockPrisma.banner.findMany.mockResolvedValue([
-        { id: '1', type: 'GENERAL', image: JSON.stringify({ url: 'test.jpg' }) },
+        {
+          id: '1',
+          type: 'GENERAL',
+          image: JSON.stringify({ url: 'test.jpg' }),
+        },
       ]);
 
       const result = await service.findAll({});

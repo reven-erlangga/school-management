@@ -12,7 +12,15 @@ export class Ethnicity {
   }
 
   static get allowedFields() {
-    return ['id', 'key', 'name', 'description', 'is_active', 'created_at', 'updated_at'];
+    return [
+      'id',
+      'key',
+      'name',
+      'description',
+      'is_active',
+      'created_at',
+      'updated_at',
+    ];
   }
 
   static get allowedFilters() {

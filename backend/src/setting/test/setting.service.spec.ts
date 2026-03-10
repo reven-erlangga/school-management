@@ -36,8 +36,8 @@ describe('SettingService', () => {
         group: 'mail',
         settings: {
           mail_host: 'smtp.gmail.com',
-          mail_password: 'secret-password'
-        }
+          mail_password: 'secret-password',
+        },
       };
 
       const upsertSpy = jest.spyOn(prisma.setting as any, 'upsert');
@@ -45,12 +45,16 @@ describe('SettingService', () => {
       await service.createOrUpdate(dto);
 
       // Check if mail_password was encrypted (not 'secret-password')
-      const passwordCall = upsertSpy.mock.calls.find(call => call[0].where.key === 'mail_password');
+      const passwordCall = upsertSpy.mock.calls.find(
+        (call) => call[0].where.key === 'mail_password',
+      );
       expect(passwordCall[0].update.value).not.toBe('secret-password');
       expect(passwordCall[0].update.is_sensitive).toBe(true);
 
       // Check if mail_host was NOT encrypted
-      const hostCall = upsertSpy.mock.calls.find(call => call[0].where.key === 'mail_host');
+      const hostCall = upsertSpy.mock.calls.find(
+        (call) => call[0].where.key === 'mail_host',
+      );
       expect(hostCall[0].update.value).toBe('smtp.gmail.com');
       expect(hostCall[0].update.is_sensitive).toBe(false);
     });
@@ -60,7 +64,11 @@ describe('SettingService', () => {
     it('should mask sensitive data when returning to frontend', async () => {
       jest.spyOn(prisma.setting as any, 'findMany').mockResolvedValue([
         { key: 'mail_host', value: 'smtp.gmail.com', is_sensitive: false },
-        { key: 'mail_password', value: 'encrypted-hex-value', is_sensitive: true }
+        {
+          key: 'mail_password',
+          value: 'encrypted-hex-value',
+          is_sensitive: true,
+        },
       ]);
 
       const result = await service.findByGroup('mail');

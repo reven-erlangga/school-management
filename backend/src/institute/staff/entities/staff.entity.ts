@@ -12,7 +12,15 @@ export class Staff {
   }
 
   static get allowedFields() {
-    return ['id', 'name', 'email', 'phone', 'status', 'created_at', 'updated_at'];
+    return [
+      'id',
+      'name',
+      'email',
+      'phone',
+      'status',
+      'created_at',
+      'updated_at',
+    ];
   }
 
   static get allowedFilters() {

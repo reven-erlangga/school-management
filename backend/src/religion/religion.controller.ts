@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { ReligionService } from './religion.service';
 import { CreateReligionDto } from './dto/create-religion.dto';
 import { UpdateReligionDto } from './dto/update-religion.dto';
@@ -36,7 +45,10 @@ export class ReligionController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a religion by ID' })
-  update(@Param('id') id: string, @Body() updateReligionDto: UpdateReligionDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateReligionDto: UpdateReligionDto,
+  ) {
     return this.religionService.update(id, updateReligionDto);
   }
 

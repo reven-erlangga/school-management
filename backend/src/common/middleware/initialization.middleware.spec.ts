@@ -35,7 +35,7 @@ describe('InitializationMiddleware', () => {
   it('should call next() if system is initialized', async () => {
     mockInitializeService.isInitialized.mockResolvedValue(true);
 
-    await middleware.use(mockRequest as any, mockResponse as any, mockNext);
+    await middleware.use(mockRequest as any, mockResponse, mockNext);
 
     expect(mockNext).toHaveBeenCalled();
   });
@@ -48,27 +48,29 @@ describe('InitializationMiddleware', () => {
     mockResponse.status = statusMock;
     mockResponse.json = jsonMock;
 
-    await middleware.use(mockRequest as any, mockResponse as any, mockNext);
-    
+    await middleware.use(mockRequest as any, mockResponse, mockNext);
+
     expect(mockNext).not.toHaveBeenCalled();
     expect(statusMock).toHaveBeenCalledWith(503);
-    expect(jsonMock).toHaveBeenCalledWith(expect.objectContaining({
-      errors: expect.arrayContaining([
-        expect.objectContaining({
-          code: 'SYSTEM_NOT_INITIALIZED',
-          status: '503',
-        })
-      ]),
-      jsonapi: expect.objectContaining({ version: '1.0' }),
-      meta: expect.objectContaining({ timestamp: expect.any(String) }),
-    }));
+    expect(jsonMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        errors: expect.arrayContaining([
+          expect.objectContaining({
+            code: 'SYSTEM_NOT_INITIALIZED',
+            status: '503',
+          }),
+        ]),
+        jsonapi: expect.objectContaining({ version: '1.0' }),
+        meta: expect.objectContaining({ timestamp: expect.any(String) }),
+      }),
+    );
   });
 
   it('should throw ServiceUnavailableException on timeout or error', async () => {
     mockInitializeService.isInitialized.mockRejectedValue(new Error('Timeout'));
 
     await expect(
-      middleware.use(mockRequest as any, mockResponse as any, mockNext),
+      middleware.use(mockRequest as any, mockResponse, mockNext),
     ).rejects.toThrow(Error);
 
     expect(mockNext).not.toHaveBeenCalled();

@@ -33,7 +33,7 @@ describe('InitializeService', () => {
   describe('check', () => {
     it('should return initialization status', async () => {
       // Mock counts for general, tolgee, mail
-      (mockPrismaService.setting.count as jest.Mock)
+      mockPrismaService.setting.count
         .mockResolvedValueOnce(1) // general
         .mockResolvedValueOnce(1) // tolgee
         .mockResolvedValueOnce(0); // mail
@@ -50,8 +50,7 @@ describe('InitializeService', () => {
     });
 
     it('should return is_initialized true when all exist', async () => {
-      (mockPrismaService.setting.count as jest.Mock)
-        .mockResolvedValue(1);
+      mockPrismaService.setting.count.mockResolvedValue(1);
 
       const result = await service.check();
 
@@ -69,16 +68,18 @@ describe('InitializeService', () => {
         created_at: new Date(),
         updated_at: new Date(),
       };
-      (mockPrismaService.setting.findFirst as jest.Mock).mockResolvedValue(mockSetting);
+      mockPrismaService.setting.findFirst.mockResolvedValue(mockSetting);
 
       const result = await service.findByKey('site_name');
       expect(result).toEqual(mockSetting);
     });
 
     it('should throw NotFoundException when not found', async () => {
-      (mockPrismaService.setting.findFirst as jest.Mock).mockResolvedValue(null);
+      mockPrismaService.setting.findFirst.mockResolvedValue(null);
 
-      await expect(service.findByKey('invalid_key')).rejects.toThrow(NotFoundException);
+      await expect(service.findByKey('invalid_key')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

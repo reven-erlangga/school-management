@@ -1,0 +1,16 @@
+{
+  "title": "School Management Portal",
+  "login": {
+    "title": "Sign In",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign In"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "students": "Students",
+    "teachers": "Teachers",
+    "classes": "Classes",
+    "subjects": "Subjects"
+  }
+}

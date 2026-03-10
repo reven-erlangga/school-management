@@ -13,7 +13,16 @@ export class Teacher {
   }
 
   static get allowedFields() {
-    return ['id', 'name', 'email', 'phone', 'status', 'institute_id', 'created_at', 'updated_at'];
+    return [
+      'id',
+      'name',
+      'email',
+      'phone',
+      'status',
+      'institute_id',
+      'created_at',
+      'updated_at',
+    ];
   }
 
   static get allowedFilters() {

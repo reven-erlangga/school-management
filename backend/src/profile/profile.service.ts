@@ -1,13 +1,15 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { QueryBuilderService } from '../common/query-builder/query-builder.service';
 import * as fs from 'fs';
 import * as path from 'path';
 
 @Injectable()
 export class ProfileService {
-  constructor(
-    private readonly queryBuilder: QueryBuilderService,
-  ) {}
+  constructor(private readonly queryBuilder: QueryBuilderService) {}
 
   async getProfile(userId: string) {
     const profiles = await this.queryBuilder
@@ -27,7 +29,10 @@ export class ProfileService {
     return profile;
   }
 
-  async updateProfile(userId: string, data: { name?: string; email?: string; image?: string }) {
+  async updateProfile(
+    userId: string,
+    data: { name?: string; email?: string; image?: string },
+  ) {
     // Check if user exists
     const user = await this.getProfile(userId);
     if (!user) {
@@ -56,7 +61,11 @@ export class ProfileService {
     return profile;
   }
 
-  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ) {
     // Get user with password
     const profiles = await this.queryBuilder
       .using('user', {

@@ -85,8 +85,15 @@ describe('ReligionService', () => {
   describe('update', () => {
     it('should update a religion', async () => {
       const dto = { name: 'Updated' };
-      mockPrisma.religion.findUnique.mockResolvedValue({ id: '1', key: 'islam' });
-      mockPrisma.religion.update.mockResolvedValue({ id: '1', key: 'islam', ...dto });
+      mockPrisma.religion.findUnique.mockResolvedValue({
+        id: '1',
+        key: 'islam',
+      });
+      mockPrisma.religion.update.mockResolvedValue({
+        id: '1',
+        key: 'islam',
+        ...dto,
+      });
 
       const result = await service.update('1', dto);
       expect(result.name).toBe('Updated');

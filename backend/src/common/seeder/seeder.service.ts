@@ -15,24 +15,26 @@ export class SeederService {
    * @param type Type of seed to run (e.g., 'users', 'settings', 'all')
    * @returns Job ID
    */
-  async runSeeder(type: string = 'all'): Promise<{ jobId: string; message: string }> {
+  async runSeeder(
+    type: string = 'all',
+  ): Promise<{ jobId: string; message: string }> {
     const jobId = uuidv4();
     const job = await this.seederQueue.add(
-      SEED_JOB, 
+      SEED_JOB,
       {
         type,
         timestamp: new Date().toISOString(),
       },
       {
         jobId: jobId, // Explicitly set custom UUID
-      }
+      },
     );
 
     this.logger.log(`Seeder job triggered: ${job.id} (Type: ${type})`);
 
     return {
       jobId: job.id || jobId,
-      message: `Seeder job started for type: ${type}`,
+      message: `Seeder job started for type - ${type}`,
     };
   }
 
@@ -47,7 +49,7 @@ export class SeederService {
 
     const state = await job.getState();
     const progress = job.progress;
-    
+
     return {
       id: job.id,
       state,

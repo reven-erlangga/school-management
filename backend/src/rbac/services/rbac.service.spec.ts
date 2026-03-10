@@ -53,13 +53,21 @@ describe('RbacService', () => {
 
   describe('createModule', () => {
     it('should throw ConflictException if module name exists', async () => {
-      mockPrismaService.module.findUnique.mockResolvedValue({ id: '1', name: 'test' });
-      await expect(service.createModule({ name: 'test' })).rejects.toThrow(ConflictException);
+      mockPrismaService.module.findUnique.mockResolvedValue({
+        id: '1',
+        name: 'test',
+      });
+      await expect(service.createModule({ name: 'test' })).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should create module if name is unique', async () => {
       mockPrismaService.module.findUnique.mockResolvedValue(null);
-      mockPrismaService.module.create.mockResolvedValue({ id: '1', name: 'test' });
+      mockPrismaService.module.create.mockResolvedValue({
+        id: '1',
+        name: 'test',
+      });
       const result = await service.createModule({ name: 'test' });
       expect(result).toEqual({ id: '1', name: 'test' });
     });
@@ -70,9 +78,7 @@ describe('RbacService', () => {
       mockPrismaService.role.findUnique.mockResolvedValue({
         id: 'r1',
         name: 'admin',
-        rolePermissions: [
-          { permission: { name: 'user.view' } }
-        ]
+        rolePermissions: [{ permission: { name: 'user.view' } }],
       });
       const result = await service.checkPermission('admin', 'user.view');
       expect(result).toBe(true);
@@ -82,7 +88,7 @@ describe('RbacService', () => {
       mockPrismaService.role.findUnique.mockResolvedValue({
         id: 'r1',
         name: 'user',
-        rolePermissions: []
+        rolePermissions: [],
       });
       const result = await service.checkPermission('user', 'user.create');
       expect(result).toBe(false);

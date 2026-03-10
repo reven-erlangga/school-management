@@ -4,7 +4,10 @@ import { PrismaService } from '../../common/prisma/prisma.service';
 
 @Injectable()
 export class RbacSeederService {
-  constructor(private rbacService: RbacService, private prisma: PrismaService) {}
+  constructor(
+    private rbacService: RbacService,
+    private prisma: PrismaService,
+  ) {}
 
   async seed() {
     // 1. Seed Modules & Permissions
@@ -66,8 +69,8 @@ export class RbacSeederService {
         name: 'admin',
         description: 'Admin with management access',
         permissions: Object.keys(createdPermissions)
-          .filter(k => k.startsWith('institute') || k.startsWith('teacher'))
-          .map(k => createdPermissions[k]),
+          .filter((k) => k.startsWith('institute') || k.startsWith('teacher'))
+          .map((k) => createdPermissions[k]),
       },
     ];
 

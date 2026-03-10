@@ -35,7 +35,7 @@ describe('CaslAbilityFactory', () => {
     const ability = factory.createForUser(user);
     expect(ability.can(Action.Read, 'users')).toBe(true);
   });
-  
+
   it('should map edit to update', () => {
     const user = { roles: ['user'], permissions: ['users.edit'] };
     const ability = factory.createForUser(user);

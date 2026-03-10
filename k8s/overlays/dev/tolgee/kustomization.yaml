@@ -1,0 +1,34 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: school-management-dev
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+resources:
+- ../../../base/tolgee
+- bootstrap-rbac.yaml
+- bootstrap-job.yaml
+
+patches:
+- path: ingress.yaml
+- path: service-patch.yaml
+
+configMapGenerator:
+- name: tolgee-config
+  literals:
+  - TOLGEE_AUTHENTICATION_ENABLED=true
+  - TOLGEE_AUTHENTICATION_INITIAL_USERNAME=admin
+  - TOLGEE_FRONT_END_URL=http://tolgee.dev.school-app.com
+  - TOLGEE_FILE_STORAGE_URL=http://tolgee.dev.school-app.com
+- name: tolgee-bootstrap-script
+  files:
+  - bootstrap.sh=scripts/bootstrap.sh
+
+secretGenerator:
+- name: tolgee-secret
+  literals:
+  - TOLGEE_AUTHENTICATION_INITIAL_PASSWORD=admin
+  - TOLGEE_AUTHENTICATION_JWT_SECRET=dev_env_super_long_jwt_secret_0123456789ABCDEF_0123456789ABCDEF
+  type: Opaque

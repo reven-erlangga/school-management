@@ -12,7 +12,11 @@ export class CreateEthnicityDto {
   @IsNotEmpty()
   name: string;
 
-  @ApiProperty({ example: 'People from Java island', description: 'Description of the ethnicity', required: false })
+  @ApiProperty({
+    example: 'People from Java island',
+    description: 'Description of the ethnicity',
+    required: false,
+  })
   @IsString()
   @IsOptional()
   description?: string;
