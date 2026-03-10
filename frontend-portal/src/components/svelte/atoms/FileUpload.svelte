@@ -17,7 +17,7 @@
 
   let {
     id = '',
-    label = 'Upload File',
+    label = '',
     placeholder = 'Click to Upload',
     accept = 'image/*',
     multiple = false,
@@ -73,14 +73,12 @@
 </script>
 
 <div class="w-full {className}">
-  {#if label}
-    <label
-      for={id}
-      class="text-xs text-slate-400 dark:text-slate-400 uppercase tracking-[0.2em] ml-1 mb-2.5 block"
-    >
-      {label} {#if required}<span class="text-rose-500">*</span>{/if}
-    </label>
-  {/if}
+  <label
+    for={id}
+    class="text-xs text-slate-400 dark:text-slate-400 uppercase tracking-[0.2em] ml-1 mb-2.5 block {label ? '' : 'invisible'}"
+  >
+    {label || '\u00A0'} {#if label && required}<span class="text-rose-500">*</span>{/if}
+  </label>
 
   <div
     role="button"

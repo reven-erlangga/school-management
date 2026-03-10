@@ -2,8 +2,8 @@ import { writable } from 'svelte/store';
 
 export enum Stage {
     General = 'general',
-    Server = 'server',
-    Superuser = 'superuser',
+    MailServer = 'mail-server',
+    SuperUser = 'super-user',
 }
 
 const createStageStore = () => {
@@ -13,13 +13,13 @@ const createStageStore = () => {
         subscribe,
         set: (step: Stage) => set(step),
         next: () => update(s => {
-            if (s === Stage.General) return Stage.Server;
-            if (s === Stage.Server) return Stage.Superuser;
+            if (s === Stage.General) return Stage.MailServer;
+            if (s === Stage.MailServer) return Stage.SuperUser;
             return s;
         }),
         back: () => update(s => {
-            if (s === Stage.Server) return Stage.General;
-            if (s === Stage.Superuser) return Stage.Server;
+            if (s === Stage.MailServer) return Stage.General;
+            if (s === Stage.SuperUser) return Stage.MailServer;
             return s;
         }),
         reset: () => set(Stage.General)

@@ -1,7 +1,8 @@
 import type { StepIndicatorItem } from "@components/svelte/atoms/StepIndicator.svelte";
+import { Stage } from "../stores/stage.store";
 
 export const steps: StepIndicatorItem[] = [
-    { id: 'general', label: 'General', icon: 'community' },
-    { id: 'server', label: 'Server', icon: 'settings' },
-    { id: 'superuser', label: 'Super User', icon: 'user' },
+    { id: Stage.General, label: 'General', icon: 'community' },
+    { id: Stage.MailServer, label: 'Mail', icon: 'settings' },
+    { id: Stage.SuperUser, label: 'Super User', icon: 'user' },
 ];

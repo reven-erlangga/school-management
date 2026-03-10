@@ -1,16 +1,9 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
-  import Button from "@components/svelte/atoms/Button.svelte";
   import TextField from "@components/svelte/atoms/TextField.svelte";
-  import { superuserForm } from '../stores/superuser-form.store';
+  import { superuserForm } from "../../../stores/superuser-form.store";
 
-  interface Props {
-    onBack: () => void;
-  }
-
-  let { onBack }: Props = $props();
-
-  const { handleInput, submit } = superuserForm;
+  const { handleInput } = superuserForm;
 </script>
 
 <div class="p-8 space-y-6" in:fade={{ duration: 300 }}>
@@ -41,16 +34,4 @@
     />
   </div>
 
-  <div class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
-    <Button variant="ghost" onclick={onBack}>Back</Button>
-    <Button 
-        variant="primary" 
-        size="lg" 
-        onclick={submit} 
-        disabled={$superuserForm.meta.loading} 
-        class="px-8"
-    >
-      {$superuserForm.meta.loading ? 'Saving...' : 'Finish Setup'}
-    </Button>
-  </div>
 </div>

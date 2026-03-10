@@ -1,12 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { fade } from 'svelte/transition';
-  import Button from "@components/svelte/atoms/Button.svelte";
   import TextField from "@components/svelte/atoms/TextField.svelte";
   import FileUpload from "@components/svelte/atoms/FileUpload.svelte";
-  import { generalForm } from '../stores/general-form.store';
+  import { generalForm } from '../../../stores/general-form.store';
 
-  const { handleInput, loadData, submit } = generalForm;
+  const { handleInput, loadData } = generalForm;
 
   onMount(() => {
     loadData();
@@ -60,7 +59,6 @@
             files={$generalForm.values.logo} 
             previewUrl={$generalForm.values.logoUrl}
             onChange={(files) => handleInput('logo', files)}
-            label="LOGO"
             placeholder="Click to Upload Logo"
             accept="image/*" 
          />
@@ -70,23 +68,9 @@
             files={$generalForm.values.favicon} 
             previewUrl={$generalForm.values.faviconUrl}
             onChange={(files) => handleInput('favicon', files)}
-            label="FAVICON"
             placeholder="Click to Upload Favicon"
             accept="image/*" 
          />
      </div>
-  </div>
-
-  <div class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
-    <div></div>
-    <Button 
-        variant="primary" 
-        size="lg" 
-        onclick={submit} 
-        disabled={$generalForm.meta.loading} 
-        class="px-8"
-    >
-      {$generalForm.meta.loading ? 'Saving...' : 'Save & Continue'}
-    </Button>
   </div>
 </div>

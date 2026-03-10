@@ -81,15 +81,15 @@
                          class:bg-violet-400={step === 'superuser'}
                          class:bg-amber-400={step === 'done'}
                     ></div>
-                    <span class="text-xs font-bold text-white tracking-widest uppercase">{current.tag}</span>
+                    <span class="text-xs font-bold text-white tracking-widest uppercase">{current?.tag}</span>
                 </div>
                 
                 <h1 class="text-6xl font-black text-white leading-[1.1] tracking-tight">
-                    {@html current.title}
+                    {@html current?.title}
                 </h1>
                 
                 <p class="text-slate-400 text-lg font-medium leading-relaxed max-w-md">
-                    {current.desc}
+                    {current?.desc}
                 </p>
             </div>
             {/key}

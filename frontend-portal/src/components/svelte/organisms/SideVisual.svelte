@@ -56,7 +56,7 @@
 </script>
 
 <div
-    class="flex w-full h-full relative bg-slate-900 overflow-hidden rounded-none {className}"
+    class="flex w-full h-full relative bg-white dark:bg-slate-900 overflow-hidden rounded-none {className}"
     class:items-center={variant === "centered"}
     class:justify-center={variant === "centered"}
     class:p-12={variant !== "with-form"}
@@ -75,7 +75,7 @@
 
     <!-- Pattern Overlay -->
     <div
-        class="absolute inset-0 opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"
+        class="absolute inset-0 opacity-[0.02] dark:opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"
     ></div>
 
     <div
@@ -88,13 +88,13 @@
         <div class="space-y-8">
             {#if tag}
             <div
-                class="inline-flex items-center gap-3 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/10"
+                class="inline-flex items-center gap-3 px-4 py-2 bg-slate-900/5 dark:bg-white/10 backdrop-blur-md rounded-full border border-slate-900/10 dark:border-white/10"
             >
                 <div
                     class="w-2 h-2 rounded-full animate-ping transition-colors duration-500 {theme.accent}"
                 ></div>
                 <span
-                    class="text-xs font-bold text-white tracking-widest uppercase"
+                    class="text-xs font-bold text-slate-900 dark:text-white tracking-widest uppercase"
                 >
                     {@render tag()}
                 </span>
@@ -103,7 +103,7 @@
 
             {#if title}
             <h1
-                class="text-6xl font-black text-white leading-[1.1] tracking-tight"
+                class="text-6xl font-black text-slate-900 dark:text-white leading-[1.1] tracking-tight"
             >
                 {@render title()}
             </h1>
@@ -111,7 +111,7 @@
 
             {#if description}
             <p
-                class="text-slate-400 text-lg font-medium leading-relaxed max-w-md"
+                class="text-slate-600 dark:text-slate-400 text-lg font-medium leading-relaxed max-w-md"
             >
                 {@render description()}
             </p>
@@ -130,7 +130,7 @@
     <!-- Floating Image/Card Mockup -->
     {#if illustration}
     <div
-        class="absolute bottom-[-10%] right-[-5%] w-[70%] aspect-video bg-white/5 backdrop-blur-2xl rounded-[40px] border border-white/10 shadow-2xl transform rotate-[-6deg] group hover:rotate-0 transition-all duration-1000 delay-200 ease-out"
+        class="absolute bottom-[-10%] right-[-5%] w-[70%] aspect-video bg-slate-900/5 dark:bg-white/5 backdrop-blur-2xl rounded-[40px] border border-slate-900/10 dark:border-white/10 shadow-2xl transform rotate-[-6deg] group hover:rotate-0 transition-all duration-1000 delay-200 ease-out"
         class:translate-y-0={!animate || mounted}
         class:opacity-100={!animate || mounted}
         class:translate-y-20={animate && !mounted}
@@ -143,7 +143,7 @@
                     <div class="w-3 h-3 rounded-full bg-amber-500/50"></div>
                     <div class="w-3 h-3 rounded-full bg-emerald-500/50"></div>
                 </div>
-                <div class="w-24 h-2 bg-white/10 rounded-full"></div>
+                <div class="w-24 h-2 bg-slate-900/10 dark:bg-white/10 rounded-full"></div>
             </div>
 
             {@render illustration()}

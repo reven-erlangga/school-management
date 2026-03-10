@@ -7,11 +7,13 @@
     bordered?: boolean;
     shadow?: boolean;
     header?: Snippet;
+    footer?: Snippet;
     children: Snippet;
     title?: string;
     subtitle?: string;
     headerPadding?: string;
     contentPadding?: string;
+    footerPadding?: string;
   }
 
   let {
@@ -20,11 +22,13 @@
     bordered = true,
     shadow = true,
     header,
+    footer,
     children,
     title = '',
     subtitle = '',
     headerPadding = 'px-8 py-6',
-    contentPadding = '',
+    contentPadding = 'px-8 py-6',
+    footerPadding = 'px-8 py-6',
   }: Props = $props();
 </script>
 
@@ -51,4 +55,10 @@
   <div class="{contentPadding}">
     {@render children()}
   </div>
+
+  {#if footer}
+    <div class="{footerPadding} border-t border-slate-100 dark:border-slate-800">
+      {@render footer()}
+    </div>
+  {/if}
 </div>
