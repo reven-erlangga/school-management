@@ -16,11 +16,15 @@ jobs:
       - name: Open or update PR
         shell: bash
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PR_BOT_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           REF_NAME: ${{ github.ref_name }}
         run: |
           set -euo pipefail
+
+          token="${GH_TOKEN:-${GITHUB_TOKEN}}"
+          export GH_TOKEN="${token}"
 
           head="${REF_NAME}"
           base=""
@@ -89,7 +93,21 @@ jobs:
 
           if [[ -z "${pr_number}" || "${pr_number}" == "null" ]]; then
             echo "Creating PR ${head} -> ${base}"
-            pr_url="$(gh pr create --repo "${REPO}" --head "${head}" --base "${base}" --title "${title}" --body "${body}")"
+            set +e
+            pr_url="$(gh pr create --repo "${REPO}" --head "${head}" --base "${base}" --title "${title}" --body "${body}" 2>&1)"
+            rc=$?
+            set -e
+
+            if [[ $rc -ne 0 ]]; then
+              if echo "${pr_url}" | grep -q "GitHub Actions is not permitted to create or approve pull requests"; then
+                echo "${pr_url}"
+                echo "Skipping: enable 'Allow GitHub Actions to create and approve pull requests' in repository settings, or set secret PR_BOT_TOKEN with a PAT that has pull request permissions."
+                exit 0
+              fi
+              echo "${pr_url}"
+              exit $rc
+            fi
+
             echo "Created: ${pr_url}"
             pr_number="${pr_url##*/}"
             gh pr edit "${pr_number}" --repo "${REPO}" --add-label "auto-pr" --add-label "${changes_type}" >/dev/null 2>&1 || true
