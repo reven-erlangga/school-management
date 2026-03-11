@@ -91,8 +91,8 @@ jobs:
             echo "Creating PR ${head} -> ${base}"
             pr_url="$(gh pr create --repo "${REPO}" --head "${head}" --base "${base}" --title "${title}" --body "${body}")"
             echo "Created: ${pr_url}"
-
-            gh pr edit --repo "${REPO}" --add-label "auto-pr" --add-label "${changes_type}" --base "${base}" --head "${head}" >/dev/null 2>&1 || true
+            pr_number="${pr_url##*/}"
+            gh pr edit "${pr_number}" --repo "${REPO}" --add-label "auto-pr" --add-label "${changes_type}" >/dev/null 2>&1 || true
           else
             echo "Updating PR #${pr_number}"
             current_body="$(gh pr view "${pr_number}" --repo "${REPO}" --json body --jq '.body' || true)"
