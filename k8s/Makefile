@@ -8,6 +8,10 @@ run:
 	if [ -z "$$env" ]; then read -p "Environment (dev/prod): " env; fi; \
 	if [ "$$env" != "dev" ] && [ "$$env" != "prod" ]; then echo "Invalid environment"; exit 1; fi; \
 	ns="school-management-$$env"; \
+	if ! kubectl get namespace $$ns >/dev/null 2>&1; then \
+	  echo "Namespace $$ns not found. Creating..."; \
+	  kubectl create namespace $$ns; \
+	fi; \
 	echo "Cleaning up old jobs..."; \
 	kubectl -n $$ns delete job tolgee-bootstrap prisma-migrate --ignore-not-found=true; \
 	kubectl -n $$ns delete pods -l job-name=tolgee-bootstrap --ignore-not-found=true --force --grace-period=0 >/dev/null 2>&1 || true; \
@@ -21,29 +25,37 @@ run:
 	  fi; \
 	fi; \
 	kubectl apply -k overlays/$$env; \
-	echo "Waiting for Tolgee bootstrap to complete (up to 300s)..."; \
-	if kubectl -n $$ns wait --for=condition=complete job/tolgee-bootstrap --timeout=300s >/dev/null 2>&1; then \
-	  echo "Tolgee bootstrap succeeded. Deleting job/pods to clean up..."; \
-	  kubectl -n $$ns delete job tolgee-bootstrap; \
-	else \
-	  echo "WARNING: Tolgee bootstrap timed out or failed. Keeping logs for inspection."; \
-	  kubectl -n $$ns logs job/tolgee-bootstrap --tail=20 || true; \
-	fi; \
-	kubectl -n $$ns scale deploy/school-backend --replicas=0 || true; \
-	kubectl -n $$ns delete pod -l app=school-backend --ignore-not-found=true || true; \
-	kubectl -n $$ns wait --for=delete pod -l app=school-backend --timeout=60s || true; \
-	kubectl -n $$ns scale deploy/school-backend --replicas=1; \
-	if ! kubectl -n $$ns rollout status deploy/school-backend --timeout=240s; then \
-	  echo "Rollout did not complete, showing diagnostics..."; \
-	  kubectl -n $$ns get pods -l app=school-backend -o wide || true; \
-	  pod=$$(kubectl -n $$ns get pods -l app=school-backend -o jsonpath="{.items[0].metadata.name}" 2>/dev/null); \
-	  if [ -n "$$pod" ]; then \
-	    kubectl -n $$ns describe pod $$pod | tail -n 200 || true; \
-	    kubectl -n $$ns logs $$pod --tail=200 || true; \
+	if kubectl -n $$ns get deploy tolgee >/dev/null 2>&1 && kubectl -n $$ns get job tolgee-bootstrap >/dev/null 2>&1; then \
+	  echo "Waiting for Tolgee bootstrap to complete (up to 300s)..."; \
+	  if kubectl -n $$ns wait --for=condition=complete job/tolgee-bootstrap --timeout=300s >/dev/null 2>&1; then \
+	    echo "Tolgee bootstrap succeeded. Deleting job/pods to clean up..."; \
+	    kubectl -n $$ns delete job tolgee-bootstrap; \
+	  else \
+	    echo "WARNING: Tolgee bootstrap timed out or failed. Keeping logs for inspection."; \
+	    kubectl -n $$ns logs job/tolgee-bootstrap --tail=50 || true; \
 	  fi; \
-	  exit 1; \
+	else \
+	  echo "Tolgee or tolgee-bootstrap job not found; skipping Tolgee bootstrap wait."; \
 	fi; \
-	echo "Applied $$env and refreshed backend pod successfully"; \
+	if kubectl -n $$ns get deploy school-backend >/dev/null 2>&1; then \
+	  kubectl -n $$ns scale deploy/school-backend --replicas=0 || true; \
+	  kubectl -n $$ns delete pod -l app=school-backend --ignore-not-found=true || true; \
+	  kubectl -n $$ns wait --for=delete pod -l app=school-backend --timeout=60s || true; \
+	  kubectl -n $$ns scale deploy/school-backend --replicas=1; \
+	  if ! kubectl -n $$ns rollout status deploy/school-backend --timeout=240s; then \
+	    echo "Rollout did not complete, showing diagnostics..."; \
+	    kubectl -n $$ns get pods -l app=school-backend -o wide || true; \
+	    pod=$$(kubectl -n $$ns get pods -l app=school-backend -o jsonpath="{.items[0].metadata.name}" 2>/dev/null); \
+	    if [ -n "$$pod" ]; then \
+	      kubectl -n $$ns describe pod $$pod | tail -n 200 || true; \
+	      kubectl -n $$ns logs $$pod --tail=200 || true; \
+	    fi; \
+	    exit 1; \
+	  fi; \
+	  echo "Applied $$env and refreshed backend pod successfully"; \
+	else \
+	  echo "Deployment school-backend not found; skipping backend refresh."; \
+	fi; \
 	\
 	echo ""; \
 	echo "Service export & status:"; \

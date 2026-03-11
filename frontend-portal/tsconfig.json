@@ -1,9 +1,10 @@
 {
   "extends": "astro/tsconfigs/strict",
   "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist"],
+  "exclude": ["dist", "**/*.test.ts", "**/*.test.svelte.ts"],
   "compilerOptions": {
     "strictNullChecks": true,
+    "types": ["vitest/globals", "node"],
     "baseUrl": ".",
     "paths": {
       "@modules/*": ["src/modules/*"],

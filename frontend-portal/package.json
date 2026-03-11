@@ -6,7 +6,9 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@astrojs/svelte": "^7.2.5",
@@ -18,5 +20,14 @@
     "tailwindcss": "^4.2.1",
     "typescript": "^5.9.3",
     "yup": "^1.7.1"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@sveltejs/vite-plugin-svelte": "^5.1.1",
+    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/svelte": "^5.2.8",
+    "@types/node": "^24.0.0",
+    "jsdom": "^26.1.0",
+    "vitest": "^3.2.4"
   }
 }

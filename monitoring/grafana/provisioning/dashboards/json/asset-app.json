@@ -1,0 +1,62 @@
+{
+  "title": "Asset App Overview",
+  "timezone": "browser",
+  "version": 1,
+  "schemaVersion": 38,
+  "annotations": {"list": []},
+  "time": {"from": "now-1h", "to": "now"},
+  "templating": {
+    "list": [
+      {
+        "name": "job",
+        "type": "query",
+        "datasource": "Prometheus",
+        "query": "label_values(up, job)",
+        "refresh": 1,
+        "includeAll": false,
+        "multi": false,
+        "current": {"text": "asset-app", "value": "asset-app"}
+      },
+      {
+        "name": "app",
+        "type": "query",
+        "datasource": "Prometheus",
+        "query": "label_values(process_cpu_seconds_total, app)",
+        "refresh": 1,
+        "includeAll": false,
+        "multi": false,
+        "current": {"text": "asset-app", "value": "asset-app"}
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Process CPU (user seconds)",
+      "datasource": "Prometheus",
+      "targets": [
+        {"expr": "process_cpu_user_seconds_total{job=\"$job\", app=\"$app\"}", "legendFormat": "user"}
+      ],
+      "gridPos": {"x": 0, "y": 0, "w": 8, "h": 6}
+    },
+    {
+      "type": "stat",
+      "title": "Heap Used (bytes)",
+      "datasource": "Prometheus",
+      "targets": [
+        {"expr": "nodejs_heap_size_used_bytes{job=\"$job\", app=\"$app\"}", "legendFormat": "heap"}
+      ],
+      "gridPos": {"x": 8, "y": 0, "w": 8, "h": 6}
+    },
+    {
+      "type": "graph",
+      "title": "Event Loop Lag",
+      "datasource": "Prometheus",
+      "targets": [
+        {"expr": "nodejs_eventloop_lag_mean_seconds{job=\"$job\", app=\"$app\"}", "legendFormat": "mean"},
+        {"expr": "nodejs_eventloop_lag_max_seconds{job=\"$job\", app=\"$app\"}", "legendFormat": "max"}
+      ],
+      "gridPos": {"x": 0, "y": 6, "w": 16, "h": 8}
+    }
+  ]
+}

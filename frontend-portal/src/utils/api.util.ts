@@ -1,5 +1,44 @@
 const API_URL = import.meta.env.API_URL || import.meta.env.PUBLIC_API_URL || 'http://localhost:3001';
 
+const isPlainObject = (value: any): value is Record<string, any> => {
+  if (value === null || typeof value !== 'object') return false;
+  if (Array.isArray(value)) return false;
+  if (value instanceof Date) return false;
+  if (value instanceof RegExp) return false;
+  if (typeof FormData !== 'undefined' && value instanceof FormData) return false;
+  if (typeof Blob !== 'undefined' && value instanceof Blob) return false;
+  return Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === null;
+};
+
+const toSnakeCaseKey = (key: string): string => key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+
+const toCamelCaseKey = (key: string): string =>
+  key.replace(/_([a-z0-9])/g, (_, char: string) => char.toUpperCase());
+
+const convertKeysToSnakeCase = (value: any): any => {
+  if (Array.isArray(value)) return value.map(convertKeysToSnakeCase);
+  if (!isPlainObject(value)) return value;
+
+  return Object.keys(value).reduce((result, key) => {
+    const snakeKey = toSnakeCaseKey(key);
+    result[snakeKey] = convertKeysToSnakeCase(value[key]);
+    return result;
+  }, {} as Record<string, any>);
+};
+
+const convertKeysToCamelCase = (value: any): any => {
+  if (Array.isArray(value)) return value.map(convertKeysToCamelCase);
+  if (!isPlainObject(value)) return value;
+
+  return Object.keys(value).reduce((result, key) => {
+    const camelKey = toCamelCaseKey(key);
+    result[camelKey] = convertKeysToCamelCase(value[key]);
+    return result;
+  }, {} as Record<string, any>);
+};
+
+const shouldConvertRequestBody = (endpoint: string) => endpoint !== '/auth/refresh';
+
 interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | boolean>;
   _retry?: boolean;
@@ -41,7 +80,7 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     'Content-Type': 'application/json',
   };
 
-  if (fetchOptions.body instanceof FormData) {
+  if (typeof FormData !== 'undefined' && fetchOptions.body instanceof FormData) {
     delete defaultHeaders['Content-Type'];
   }
 
@@ -76,7 +115,8 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     throw new Error('Service Unavailable');
   }
 
-  const data = await response.json();
+  const rawData = await response.json();
+  const data = convertKeysToCamelCase(rawData);
 
   if (!response.ok) {
     // Handle 401 Unauthorized - Token Refresh
@@ -103,7 +143,7 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
             body: JSON.stringify({ refreshToken })
           });
 
-          const refreshData = await refreshResponse.json();
+          const refreshData = convertKeysToCamelCase(await refreshResponse.json());
 
           if (refreshResponse.ok && refreshData.data) {
              const data = refreshData.data;
@@ -165,28 +205,46 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
 
 export const api = {
   get: <T>(endpoint: string, options?: RequestOptions) => request<T>(endpoint, { ...options, method: 'GET' }),
-  post: <T>(endpoint: string, body: any, options?: RequestOptions) => {
-    const isFormData = body instanceof FormData;
+  post: <T>(endpoint: string, body?: any | null, options?: RequestOptions) => {
+    if (body === undefined || body === null) {
+      return request<T>(endpoint, { ...options, method: 'POST' });
+    }
+
+    const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+    const normalizedBody =
+      isFormData || !shouldConvertRequestBody(endpoint) ? body : convertKeysToSnakeCase(body);
     return request<T>(endpoint, { 
       ...options, 
       method: 'POST', 
-      body: isFormData ? body : JSON.stringify(body) 
+      body: isFormData ? body : JSON.stringify(normalizedBody) 
     });
   },
-  put: <T>(endpoint: string, body: any, options?: RequestOptions) => {
-    const isFormData = body instanceof FormData;
+  put: <T>(endpoint: string, body?: any | null, options?: RequestOptions) => {
+    if (body === undefined || body === null) {
+      return request<T>(endpoint, { ...options, method: 'PUT' });
+    }
+
+    const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+    const normalizedBody =
+      isFormData || !shouldConvertRequestBody(endpoint) ? body : convertKeysToSnakeCase(body);
     return request<T>(endpoint, { 
       ...options, 
       method: 'PUT', 
-      body: isFormData ? body : JSON.stringify(body) 
+      body: isFormData ? body : JSON.stringify(normalizedBody) 
     });
   },
-  patch: <T>(endpoint: string, body: any, options?: RequestOptions) => {
-    const isFormData = body instanceof FormData;
+  patch: <T>(endpoint: string, body?: any | null, options?: RequestOptions) => {
+    if (body === undefined || body === null) {
+      return request<T>(endpoint, { ...options, method: 'PATCH' });
+    }
+
+    const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+    const normalizedBody =
+      isFormData || !shouldConvertRequestBody(endpoint) ? body : convertKeysToSnakeCase(body);
     return request<T>(endpoint, { 
       ...options, 
       method: 'PATCH', 
-      body: isFormData ? body : JSON.stringify(body) 
+      body: isFormData ? body : JSON.stringify(normalizedBody) 
     });
   },
   delete: <T>(endpoint: string, options?: RequestOptions) => request<T>(endpoint, { ...options, method: 'DELETE' }),

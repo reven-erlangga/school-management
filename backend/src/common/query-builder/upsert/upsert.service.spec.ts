@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UpsertService } from './upsert.service';
-import { Repository } from 'typeorm';
 import { InternalServerErrorException } from '@nestjs/common';
 
 interface TestEntity {
@@ -9,30 +8,19 @@ interface TestEntity {
   email: string;
 }
 
-const mockRepository = {
-  metadata: {
-    tableName: 'test_table',
-  },
-  findOne: jest.fn(),
-  merge: jest.fn(),
-  save: jest.fn(),
-  create: jest.fn(),
+const mockDelegate = {
+  upsert: jest.fn(),
 };
 
 describe('UpsertService', () => {
   let service: UpsertService;
-  let repository: Repository<TestEntity>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        UpsertService,
-        { provide: Repository, useValue: mockRepository },
-      ],
+      providers: [UpsertService],
     }).compile();
 
     service = module.get<UpsertService>(UpsertService);
-    repository = module.get<Repository<TestEntity>>(Repository);
 
     jest.clearAllMocks();
   });
@@ -43,59 +31,36 @@ describe('UpsertService', () => {
 
   describe('upsert', () => {
     const data: TestEntity = { name: 'test', email: 'test@example.com' };
-    const conflictPaths = ['email'];
-    const existingEntity: TestEntity = {
-      id: 1,
-      name: 'old',
-      email: 'test@example.com',
-    };
+    const where = { email: 'test@example.com' };
 
-    it('should update existing entity if found', async () => {
-      mockRepository.findOne.mockResolvedValue(existingEntity);
-      const mergedEntity = { ...existingEntity, ...data };
-      mockRepository.merge.mockReturnValue(mergedEntity);
-      mockRepository.save.mockResolvedValue(mergedEntity);
+    it('should call delegate.upsert and return result', async () => {
+      mockDelegate.upsert.mockResolvedValueOnce({ id: 1, ...data });
 
-      const result = await service.upsert(repository, data, conflictPaths);
+      const result = await service.upsert(
+        mockDelegate,
+        where,
+        data as unknown as Record<string, unknown>,
+        'user',
+      );
 
-      expect(mockRepository.findOne).toHaveBeenCalledWith({
-        where: { email: 'test@example.com' },
+      expect(mockDelegate.upsert).toHaveBeenCalledWith({
+        where,
+        create: data,
+        update: data,
       });
-      expect(mockRepository.merge).toHaveBeenCalledWith(existingEntity, data);
-      expect(mockRepository.save).toHaveBeenCalledWith(mergedEntity);
-      expect(result).toEqual(mergedEntity);
+      expect(result).toEqual({ id: 1, ...data });
     });
 
-    it('should create new entity if not found', async () => {
-      mockRepository.findOne.mockResolvedValue(null);
-      mockRepository.create.mockReturnValue(data);
-      mockRepository.save.mockResolvedValue({ id: 2, ...data });
-
-      const result = await service.upsert(repository, data, conflictPaths);
-
-      expect(mockRepository.findOne).toHaveBeenCalledWith({
-        where: { email: 'test@example.com' },
-      });
-      expect(mockRepository.create).toHaveBeenCalledWith(data);
-      expect(mockRepository.save).toHaveBeenCalledWith(data);
-      expect(result).toEqual({ id: 2, ...data });
-    });
-
-    it('should throw InternalServerErrorException on find error', async () => {
-      mockRepository.findOne.mockRejectedValue(new Error('DB Error'));
+    it('should throw InternalServerErrorException on upsert error', async () => {
+      mockDelegate.upsert.mockRejectedValueOnce(new Error('DB Error'));
 
       await expect(
-        service.upsert(repository, data, conflictPaths),
-      ).rejects.toThrow(InternalServerErrorException);
-    });
-
-    it('should throw InternalServerErrorException on save error', async () => {
-      mockRepository.findOne.mockResolvedValue(null);
-      mockRepository.create.mockReturnValue(data);
-      mockRepository.save.mockRejectedValue(new Error('Save Error'));
-
-      await expect(
-        service.upsert(repository, data, conflictPaths),
+        service.upsert(
+          mockDelegate,
+          where,
+          data as unknown as Record<string, unknown>,
+          'user',
+        ),
       ).rejects.toThrow(InternalServerErrorException);
     });
   });

@@ -5,7 +5,55 @@ import { fetchOneConfigurationApi } from '../api/fetch-one-configuration.api';
 import { createSuperUserApi } from '../api/create-super-user.api';
 import { uploadConfigurationFileApi } from '../api/upload-configuration-file.api';
 
-export const configurationService = {
+export interface ConfigurationService {
+    saveGeneralSettings: (settings: {
+        foundationName: string;
+        appName: string;
+        shortName: string;
+        description: string;
+        logo: File | null;
+        favicon: File | null;
+    }) => Promise<boolean>;
+    getGeneralSettings: () => Promise<{
+        foundationName: string;
+        appName: string;
+        shortName: string;
+        description: string;
+        logoUrl: string | null;
+        faviconUrl: string | null;
+    }>;
+    saveMailServerSettings: (settings: {
+        host: string;
+        port: string;
+        username: string;
+        password?: string;
+        fromEmail: string;
+    }) => Promise<void>;
+    getMailServerSettings: () => Promise<{
+        host: string;
+        port: string;
+        username: string;
+        password: string;
+        fromEmail: string;
+    }>;
+    createSuperUser: (data: { name: string; email: string; password: string }) => Promise<any>;
+    saveXenditSettings: (settings: {
+        enabled: boolean;
+        paymentMode: 'manual' | 'xendit';
+        apiKey: string;
+        secretKey: string;
+        webhookUrl: string;
+    }) => Promise<void>;
+    getXenditSettings: () => Promise<{
+        enabled: boolean | string;
+        paymentMode: string;
+        apiKey: string;
+        secretKey: string;
+        webhookUrl: string;
+    }>;
+}
+
+export const configurationService: ConfigurationService = {
     saveGeneralSettings: async (settings: {
         foundationName: string;
         appName: string;
@@ -17,9 +65,9 @@ export const configurationService = {
         try {
             // Save text settings
             await createOrUpdateConfigurationApi('general', {
-                foundation_name: settings.foundationName,
-                app_name: settings.appName,
-                short_name: settings.shortName,
+                foundationName: settings.foundationName,
+                appName: settings.appName,
+                shortName: settings.shortName,
                 description: settings.description
             });
 
@@ -65,9 +113,9 @@ export const configurationService = {
             }
 
             return {
-                foundationName: data.foundation_name || '',
-                appName: data.app_name || '',
-                shortName: data.short_name || '',
+                foundationName: data.foundationName || '',
+                appName: data.appName || '',
+                shortName: data.shortName || '',
                 description: data.description || '',
                 logoUrl,
                 faviconUrl
@@ -78,33 +126,21 @@ export const configurationService = {
         }
     },
 
-    saveServerSettings: async (settings: {
-        tolgee: {
-            apiUrl: string;
-            apiKey: string;
-        },
-        mailServer: {
-            host: string;
-            port: string;
-            username: string;
-            password?: string;
-            fromEmail: string;
-        }
+    saveMailServerSettings: async (settings: {
+        host: string;
+        port: string;
+        username: string;
+        password?: string;
+        fromEmail: string;
     }) => {
         try {
-            // Save Tolgee settings
-            await createOrUpdateConfigurationApi('tolgee', {
-                api_url: settings.tolgee.apiUrl,
-                api_key: settings.tolgee.apiKey
-            });
-
             // Save Mail Server settings
             await createOrUpdateConfigurationApi('mail-server', {
-                host: settings.mailServer.host,
-                port: settings.mailServer.port,
-                username: settings.mailServer.username,
-                password: settings.mailServer.password,
-                from_email: settings.mailServer.fromEmail
+                host: settings.host,
+                port: settings.port,
+                username: settings.username,
+                password: settings.password,
+                fromEmail: settings.fromEmail
             });
         } catch (error) {
             console.error('Failed to save server settings:', error);
@@ -112,25 +148,16 @@ export const configurationService = {
         }
     },
 
-    getServerSettings: async () => {
+    getMailServerSettings: async () => {
         try {
-            const [tolgeeData, mailData] = await Promise.all([
-                fetchOneConfigurationApi('tolgee'),
-                fetchOneConfigurationApi('mail-server')
-            ]);
+            const mailData = await fetchOneConfigurationApi('mail-server');
 
             return {
-                tolgee: {
-                    apiUrl: tolgeeData.api_url || '',
-                    apiKey: tolgeeData.api_key || ''
-                },
-                mailServer: {
-                    host: mailData.host || '',
-                    port: mailData.port || '',
-                    username: mailData.username || '',
-                    password: mailData.password || '',
-                    fromEmail: mailData.from_email || ''
-                }
+                host: mailData.host || '',
+                port: mailData.port || '',
+                username: mailData.username || '',
+                password: mailData.password || '',
+                fromEmail: mailData.fromEmail || ''
             };
         } catch (error) {
             console.error('Failed to get server settings:', error);
@@ -147,6 +174,43 @@ export const configurationService = {
             return await createSuperUserApi(data);
         } catch (error) {
             console.error('Failed to create super user:', error);
+            throw error;
+        }
+    },
+
+    saveXenditSettings: async (settings: {
+        enabled: boolean;
+        paymentMode: 'manual' | 'xendit';
+        apiKey: string;
+        secretKey: string;
+        webhookUrl: string;
+    }) => {
+        try {
+            await createOrUpdateConfigurationApi('xendit', {
+                xendit_enabled: settings.enabled,
+                xendit_payment_mode: settings.paymentMode,
+                xendit_api_key: settings.apiKey,
+                xendit_webhook_secret: settings.secretKey,
+                xendit_webhook_url: settings.webhookUrl
+            });
+        } catch (error) {
+            console.error('Failed to save Xendit settings:', error);
+            throw error;
+        }
+    },
+
+    getXenditSettings: async () => {
+        try {
+            const data = await fetchOneConfigurationApi('xendit');
+            return {
+                enabled: data.xendit_enabled ?? data.enabled ?? false,
+                paymentMode: data.xendit_payment_mode ?? data.paymentMode ?? 'manual',
+                apiKey: data.xendit_api_key ?? data.apiKey ?? '',
+                secretKey: data.xendit_webhook_secret ?? data.secretKey ?? '',
+                webhookUrl: data.xendit_webhook_url ?? data.webhookUrl ?? ''
+            };
+        } catch (error) {
+            console.error('Failed to get Xendit settings:', error);
             throw error;
         }
     }

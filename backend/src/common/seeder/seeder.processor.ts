@@ -4,6 +4,8 @@ import { Job } from 'bullmq';
 import { SEEDER_QUEUE } from './queue/queue.config';
 import { GeographicalService } from './geographical/geographical.service';
 import { TranslationService } from './translation/translation.service';
+import { GenderService } from './gender/gender.service';
+import { ReligionService } from './religion/religion.service';
 
 @Processor(SEEDER_QUEUE)
 export class SeederProcessor extends WorkerHost {
@@ -12,6 +14,8 @@ export class SeederProcessor extends WorkerHost {
   constructor(
     private readonly geographicalService: GeographicalService,
     private readonly translationService: TranslationService,
+    private readonly genderService: GenderService,
+    private readonly religionService: ReligionService,
   ) {
     super();
   }
@@ -21,24 +25,32 @@ export class SeederProcessor extends WorkerHost {
 
     await job.updateProgress(0);
 
-    const { type } = job.data;
+    const type =
+      typeof (job.data as { type?: unknown })?.type === 'string'
+        ? ((job.data as { type?: unknown }).type as string)
+        : 'all';
 
     try {
       if (type === 'translations') {
         return await this.runTranslationsSeeder(job);
+      } else if (type === 'gender') {
+        return await this.runGenderSeeder(job);
+      } else if (type === 'religion') {
+        return await this.runReligionSeeder(job);
       } else if (type === 'geographical') {
         return await this.runGeographicalSeeder(job);
       } else {
         return await this.runSeederSequence(job);
       }
-    } catch (error) {
-      this.logger.error(`Job ${job.id} failed: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Job ${job.id} failed: ${message}`);
       throw error;
     }
   }
 
   private async runSeederSequence(job: Job): Promise<string> {
-    const seeders = ['translations', 'geographical'];
+    const seeders = ['gender', 'religion', 'translations', 'geographical'];
     const totalSeeders = seeders.length;
 
     for (let i = 0; i < totalSeeders; i++) {
@@ -55,6 +67,10 @@ export class SeederProcessor extends WorkerHost {
 
       if (seederName === 'translations') {
         await this.runTranslationsSeeder(job, i, totalSeeders);
+      } else if (seederName === 'gender') {
+        await this.runGenderSeeder(job, i, totalSeeders);
+      } else if (seederName === 'religion') {
+        await this.runReligionSeeder(job, i, totalSeeders);
       } else if (seederName === 'geographical') {
         await this.runGeographicalSeeder(job, i, totalSeeders);
       }
@@ -70,6 +86,48 @@ export class SeederProcessor extends WorkerHost {
     });
 
     return 'All seeders completed successfully';
+  }
+
+  private async runGenderSeeder(
+    job: Job,
+    stepIndex = 0,
+    totalSteps = 1,
+  ): Promise<string> {
+    await this.genderService.seed(async (progress, message) => {
+      const globalProgress = Math.round(
+        ((stepIndex + progress / 100) / totalSteps) * 100,
+      );
+      await job.updateProgress({
+        percent: globalProgress,
+        step: 'gender',
+        progress: progress,
+        message: message,
+      });
+      await job.log(message);
+    });
+
+    return 'Gender seed completed';
+  }
+
+  private async runReligionSeeder(
+    job: Job,
+    stepIndex = 0,
+    totalSteps = 1,
+  ): Promise<string> {
+    await this.religionService.seed(async (progress, message) => {
+      const globalProgress = Math.round(
+        ((stepIndex + progress / 100) / totalSteps) * 100,
+      );
+      await job.updateProgress({
+        percent: globalProgress,
+        step: 'religion',
+        progress: progress,
+        message: message,
+      });
+      await job.log(message);
+    });
+
+    return 'Religion seed completed';
   }
 
   private async runGeographicalSeeder(

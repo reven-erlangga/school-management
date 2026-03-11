@@ -3,61 +3,39 @@ import {
   Logger,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { Repository, ObjectLiteral, FindOptionsWhere } from 'typeorm';
-import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
+
+export type UpsertDelegate<T> = {
+  upsert: (args: {
+    where: Record<string, unknown>;
+    create: Record<string, unknown>;
+    update: Record<string, unknown>;
+  }) => Promise<T>;
+};
 
 @Injectable()
 export class UpsertService {
   private readonly logger = new Logger(UpsertService.name);
 
-  async upsert<T extends ObjectLiteral>(
-    repository: Repository<T>,
-    data: QueryDeepPartialEntity<T>,
-    conflictPaths: string[],
+  async upsert<T>(
+    delegate: UpsertDelegate<T>,
+    where: Record<string, unknown>,
+    data: Record<string, unknown>,
+    modelName?: string,
   ): Promise<T> {
     try {
       this.logger.log(
-        `Upserting entity in ${repository.metadata.tableName} with conflict paths: ${conflictPaths.join(', ')}`,
+        `Upserting${modelName ? ` in ${modelName}` : ''} with where keys: ${Object.keys(where).join(', ')}`,
       );
 
-      // Construct where condition from conflict paths
-      const whereCondition: FindOptionsWhere<T> = {};
-      for (const path of conflictPaths) {
-        if (path in data) {
-          (whereCondition as unknown as Record<string, unknown>)[path] = (
-            data as Record<string, unknown>
-          )[path];
-        }
-      }
-
-      // Check if entity exists
-      const existingEntity = await repository.findOne({
-        where: whereCondition,
+      const saved = await delegate.upsert({
+        where,
+        create: data,
+        update: data,
       });
-
-      if (existingEntity) {
-        this.logger.log(
-          `Entity found in ${repository.metadata.tableName}, updating...`,
-        );
-        // Update existing entity
-        const mergedEntity = repository.merge(
-          existingEntity,
-          data as unknown as T,
-        );
-        const savedEntity = await repository.save(mergedEntity);
-        return savedEntity;
-      }
-
-      this.logger.log(
-        `Entity not found in ${repository.metadata.tableName}, creating...`,
-      );
-      // Create new entity
-      const newEntity = repository.create(data as unknown as T);
-      const savedEntity = await repository.save(newEntity);
-      return savedEntity;
+      return saved;
     } catch (error) {
       this.logger.error(
-        `Error upserting entity in ${repository.metadata.tableName}: ${error instanceof Error ? error.message : JSON.stringify(error)}`,
+        `Error upserting${modelName ? ` in ${modelName}` : ''}: ${error instanceof Error ? error.message : JSON.stringify(error)}`,
         error instanceof Error ? error.stack : undefined,
       );
 

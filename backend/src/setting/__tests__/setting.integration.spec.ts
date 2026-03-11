@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { SettingService } from '../setting.service';
 import { QueryBuilderModule } from '../../common/query-builder/query-builder.module';
-import { QueryBuilder } from '../../common/query-builder/QueryBuilder';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { InitializeService } from '../../initialize/initialize.service';
 import { ConfigService } from '@nestjs/config';
@@ -14,12 +13,12 @@ describe('SettingService Integration', () => {
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [QueryBuilderModule],
       providers: [
         SettingService,
         PrismaService,
         InitializeService,
         ConfigService,
-        QueryBuilder,
         {
           provide: RedisService,
           useValue: {
@@ -91,7 +90,7 @@ describe('SettingService Integration', () => {
     // Schema definition: @@id([group, key]) usually.
     // If findByKey uses 'key' in where, it might return multiple if different groups use same key.
     // But SettingService.findByKey returns first one.
-    expect(result).toBeDefined();
-    expect(result.key).toBe('site_name');
+    expect(result).not.toBeNull();
+    expect(result?.key).toBe('site_name');
   });
 });

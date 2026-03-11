@@ -4,18 +4,24 @@
   interface Props {
     onclick?: (e: MouseEvent) => void;
     type?: 'button' | 'submit' | 'reset';
+    href?: string;
+    target?: '_self' | '_blank' | '_parent' | '_top';
+    rel?: string;
     variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'outline';
     size?: 'sm' | 'md' | 'lg' | 'icon';
     class?: string;
     disabled?: boolean;
     title?: string;
     children?: Snippet;
-    ref?: HTMLButtonElement | null;
+    ref?: HTMLButtonElement | HTMLAnchorElement | null;
   }
 
   let { 
     onclick, 
     type = 'button', 
+    href,
+    target,
+    rel,
     variant = 'primary', 
     size = 'md',
     class: className = '',
@@ -41,19 +47,42 @@
   };
 </script>
 
-<button
-  bind:this={ref}
-  {type}
-  {onclick}
-  {disabled}
-  {title}
-  class="
-    flex items-center justify-center transition-all active:scale-95 cursor-pointer border
-    disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100
-    {variants[variant]}
-    {sizes[size]}
-    {className}
-  "
->
-  {@render children?.()}
-</button>
+{#if href}
+  <a
+    bind:this={ref}
+    href={disabled ? undefined : href}
+    {target}
+    rel={rel ?? (target === '_blank' ? 'noopener noreferrer' : undefined)}
+    {onclick}
+    {title}
+    aria-disabled={disabled}
+    class="
+      inline-flex items-center justify-center transition-all active:scale-95 cursor-pointer border
+      disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100
+      {disabled ? 'pointer-events-none opacity-50 cursor-not-allowed active:scale-100' : ''}
+      {variants[variant]}
+      {sizes[size]}
+      {className}
+    "
+  >
+    {@render children?.()}
+  </a>
+{:else}
+  <button
+    bind:this={ref}
+    {type}
+    {onclick}
+    {disabled}
+    {title}
+    class="
+      inline-flex items-center justify-center transition-all active:scale-95 cursor-pointer border
+      disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100
+      {disabled ? 'pointer-events-none opacity-50 cursor-not-allowed active:scale-100' : ''}
+      {variants[variant]}
+      {sizes[size]}
+      {className}
+    "
+  >
+    {@render children?.()}
+  </button>
+{/if}

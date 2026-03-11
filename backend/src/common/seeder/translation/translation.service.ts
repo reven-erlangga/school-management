@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { VaultService } from '../../vault/vault.service';
-import axios, { AxiosInstance } from 'axios';
+import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
@@ -36,11 +36,14 @@ export class TranslationService {
           `Vault connection failed (${status.address}): ${status.error ?? 'unknown'}`,
         );
       }
-    } catch (e: any) {
-      await reportProgress(
-        0,
-        `Vault connection check failed: ${e?.message ?? e}`,
-      );
+    } catch (e: unknown) {
+      const message =
+        e instanceof Error
+          ? e.message
+          : typeof e === 'string'
+            ? e
+            : JSON.stringify(e);
+      await reportProgress(0, `Vault connection check failed: ${message}`);
     }
 
     // 2. Perform Seeding
@@ -75,8 +78,25 @@ export class TranslationService {
       const baseProgress = 20 + Math.round((i / totalApps) * 70);
 
       try {
-        const cred = await this.vaultService.readSecret(`kv/${appType}`);
-        if (!cred?.TOLGEE_API_URL || !cred?.TOLGEE_API_KEY) {
+        const cred = (await this.vaultService.readSecret(
+          `kv/${appType}`,
+        )) as Record<string, unknown> | null;
+        const apiUrl =
+          cred && typeof cred['TOLGEE_API_URL'] === 'string'
+            ? cred['TOLGEE_API_URL']
+            : null;
+        const apiKey =
+          cred && typeof cred['TOLGEE_API_KEY'] === 'string'
+            ? cred['TOLGEE_API_KEY']
+            : null;
+        const vaultProjectIdRaw =
+          cred &&
+          (typeof cred['TOLGEE_PROJECT_ID'] === 'string' ||
+            typeof cred['TOLGEE_PROJECT_ID'] === 'number')
+            ? cred['TOLGEE_PROJECT_ID']
+            : null;
+
+        if (!apiUrl || !apiKey) {
           await reportProgress(
             baseProgress,
             `[Tolgee Seed] Missing credentials in Vault for ${appType}. Skipping.`,
@@ -84,13 +104,13 @@ export class TranslationService {
           continue;
         }
 
-        const client = this.getTolgeeClient(
-          cred.TOLGEE_API_URL,
-          cred.TOLGEE_API_KEY,
-        );
-        const projectId = cred.TOLGEE_PROJECT_ID
-          ? Number(cred.TOLGEE_PROJECT_ID)
-          : await this.resolveProjectId(client);
+        const client = this.getTolgeeClient(apiUrl, apiKey);
+        const resolvedProjectId = await this.resolveProjectId(client);
+        const fallbackProjectId =
+          vaultProjectIdRaw && !Number.isNaN(Number(vaultProjectIdRaw))
+            ? Number(vaultProjectIdRaw)
+            : null;
+        const projectId = resolvedProjectId ?? fallbackProjectId;
 
         if (!projectId) {
           await reportProgress(
@@ -98,6 +118,16 @@ export class TranslationService {
             `[Tolgee Seed] Unable to resolve projectId for ${appType}. Skipping.`,
           );
           continue;
+        }
+        if (
+          resolvedProjectId &&
+          fallbackProjectId &&
+          resolvedProjectId !== fallbackProjectId
+        ) {
+          await reportProgress(
+            baseProgress,
+            `[Tolgee Seed] Vault projectId mismatch for ${appType} (vault=${fallbackProjectId}, apiKey=${resolvedProjectId}). Using apiKey projectId.`,
+          );
         }
 
         const appEnPath = path.join(assetsDir, appType, 'en.json');
@@ -133,10 +163,16 @@ export class TranslationService {
         const existing = cred || {};
         const merged = { ...existing, TOLGEE_PROJECT_ID: String(projectId) };
         await this.vaultService.writeSecret(`kv/${appType}`, merged);
-      } catch (e: any) {
+      } catch (e: unknown) {
+        const message =
+          e instanceof Error
+            ? e.message
+            : typeof e === 'string'
+              ? e
+              : JSON.stringify(e);
         await reportProgress(
           baseProgress,
-          `[Tolgee Seed] Failed for ${appType}: ${e?.message ?? e}`,
+          `[Tolgee Seed] Failed for ${appType}: ${message}`,
         );
       }
     }
@@ -144,11 +180,15 @@ export class TranslationService {
 
   private async safeReadJson(
     filePath: string,
-  ): Promise<Record<string, any> | null> {
+  ): Promise<Record<string, unknown> | null> {
     try {
       const content = await fs.readFile(filePath, 'utf8');
       if (!content || !content.trim()) return null;
-      return JSON.parse(content);
+      const parsed = JSON.parse(content) as unknown;
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
+      }
+      return null;
     } catch {
       return null;
     }
@@ -172,32 +212,63 @@ export class TranslationService {
     client: AxiosInstance,
   ): Promise<number | null> {
     try {
-      const resp = await client.get('/v2/api-keys/current');
-      const projectId = resp?.data?.projectId ?? null;
-      return projectId;
-    } catch (e: any) {
-      const msg = e?.response?.data
-        ? JSON.stringify(e.response.data)
-        : e?.message;
+      const resp = await client.get<{ projectId?: number }>(
+        '/v2/api-keys/current',
+      );
+      return typeof resp.data?.projectId === 'number'
+        ? resp.data.projectId
+        : null;
+    } catch (e: unknown) {
+      const msg = this.getAxiosOrErrorMessage(e);
       this.logger.error(`[Tolgee] Failed to resolve projectId: ${msg}`);
       return null;
     }
   }
 
+  private getAxiosOrErrorMessage(error: unknown): string {
+    if (axios.isAxiosError(error)) {
+      const response = error.response as AxiosResponse<unknown> | undefined;
+      if (typeof response?.data !== 'undefined') {
+        return JSON.stringify(response.data);
+      }
+      return error.message;
+    }
+    if (error instanceof Error) return error.message;
+    if (typeof error === 'string') return error;
+    return JSON.stringify(error);
+  }
+
   private flatten(
-    obj: Record<string, any>,
+    obj: Record<string, unknown>,
     prefix = '',
   ): Record<string, string> {
     const out: Record<string, string> = {};
     for (const [k, v] of Object.entries(obj || {})) {
       const key = prefix ? `${prefix}.${k}` : k;
-      if (v && typeof v === 'object' && !Array.isArray(v)) {
+      if (Array.isArray(v)) {
+        out[key] = JSON.stringify(v);
+        continue;
+      }
+
+      if (this.isPlainObject(v)) {
         Object.assign(out, this.flatten(v, key));
-      } else if (v !== undefined && v !== null) {
-        out[key] = String(v);
+        continue;
+      }
+
+      if (v !== undefined && v !== null) {
+        if (typeof v === 'string') out[key] = v;
+        else if (typeof v === 'number') out[key] = String(v);
+        else if (typeof v === 'boolean') out[key] = String(v);
+        else if (typeof v === 'bigint') out[key] = String(v);
+        else if (typeof v === 'symbol') out[key] = v.toString();
+        else out[key] = JSON.stringify(v);
       }
     }
     return out;
+  }
+
+  private isPlainObject(value: unknown): value is Record<string, unknown> {
+    return Object.prototype.toString.call(value) === '[object Object]';
   }
 
   private async importKeys(
@@ -222,10 +293,8 @@ export class TranslationService {
       this.logger.log(
         `[Tolgee] Imported ${keysPayload.length} keys (with translations) into project ${projectId}`,
       );
-    } catch (e: any) {
-      const msg = e?.response?.data
-        ? JSON.stringify(e.response.data)
-        : e?.message;
+    } catch (e: unknown) {
+      const msg = this.getAxiosOrErrorMessage(e);
       throw new Error(`Tolgee import failed: ${msg}`);
     }
   }

@@ -7,6 +7,9 @@ import { SeederProcessor } from './seeder.processor';
 import { queueConfig, SEEDER_QUEUE } from './queue/queue.config';
 import { GeographicalService } from './geographical/geographical.service';
 import { TranslationService } from './translation/translation.service';
+import { SeederKeyService } from '../utils/seeder/seeder-key.service';
+import { GenderService } from './gender/gender.service';
+import { ReligionService } from './religion/religion.service';
 
 @Module({
   imports: [
@@ -34,6 +37,9 @@ import { TranslationService } from './translation/translation.service';
     SeederProcessor,
     GeographicalService,
     TranslationService,
+    SeederKeyService,
+    GenderService,
+    ReligionService,
   ],
   exports: [SeederService],
 })

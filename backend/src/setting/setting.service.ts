@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { InitializeService } from '../initialize/initialize.service';
-import { QueryBuilder } from '../common/query-builder/QueryBuilder';
+import { PrismaService } from '../common/prisma/prisma.service';
+import { QueryBuilderService } from '../common/query-builder/query-builder.service';
+import type { Setting } from '@prisma/client';
 
 @Injectable()
 export class SettingService {
@@ -27,8 +29,9 @@ export class SettingService {
   ];
 
   constructor(
-    private queryBuilder: QueryBuilder,
-    private initializeService: InitializeService,
+    private readonly prisma: PrismaService,
+    private readonly queryBuilder: QueryBuilderService,
+    private readonly initializeService: InitializeService,
   ) {}
 
   private encrypt(text: string): string {
@@ -48,7 +51,7 @@ export class SettingService {
       let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
       decrypted += decipher.final('utf8');
       return decrypted;
-    } catch (e) {
+    } catch {
       return ''; // Return empty if decryption fails
     }
   }
@@ -59,14 +62,14 @@ export class SettingService {
     return value.substring(0, 4) + '****';
   }
 
-  async findByGroup(group: string) {
-    const settings = await this.queryBuilder.find({
-      table: 'setting',
-      where: { group },
-    });
+  async findByGroup(group: string): Promise<Record<string, string>> {
+    const settings = (await this.queryBuilder
+      .using('setting', { filter: { group } })
+      .allowedFilters(['group'])
+      .execute()) as Array<Pick<Setting, 'key' | 'value' | 'is_sensitive'>>;
 
-    const result: Record<string, any> = {};
-    settings.forEach((s: any) => {
+    const result: Record<string, string> = {};
+    settings.forEach((s) => {
       let value = s.value;
       const isActuallySensitive =
         s.is_sensitive || this.sensitiveKeys.includes(s.key);
@@ -83,14 +86,14 @@ export class SettingService {
     return result;
   }
 
-  async getInternalByGroup(group: string) {
-    const settings = await this.queryBuilder.find({
-      table: 'setting',
-      where: { group },
-    });
+  async getInternalByGroup(group: string): Promise<Record<string, string>> {
+    const settings = (await this.queryBuilder
+      .using('setting', { filter: { group } })
+      .allowedFilters(['group'])
+      .execute()) as Array<Pick<Setting, 'key' | 'value' | 'is_sensitive'>>;
 
-    const result: Record<string, any> = {};
-    settings.forEach((s: any) => {
+    const result: Record<string, string> = {};
+    settings.forEach((s) => {
       let value = s.value;
       if (s.is_sensitive && value) {
         value = this.decrypt(value);
@@ -102,25 +105,25 @@ export class SettingService {
   }
 
   // New method as requested: findByKey(key)
-  async findByKey(key: string) {
-    const results = await this.queryBuilder.find({
-      table: 'setting',
-      where: { key },
-    });
-    return results.length > 0 ? results[0] : null;
+  async findByKey(key: string): Promise<Setting | null> {
+    const result = await this.prisma.setting.findFirst({ where: { key } });
+    return result;
   }
 
   // New method as requested: findByType(type, options) - assuming 'group' maps to 'type' or just generic search
-  async findByType(type: string, options?: { page?: number; limit?: number }) {
-    return await this.queryBuilder.find({
-      table: 'setting',
-      where: { group: type },
-      limit: options?.limit,
-      offset:
-        options?.page && options?.limit
-          ? (options.page - 1) * options.limit
-          : undefined,
-    });
+  async findByType(
+    type: string,
+    options?: { page?: number; limit?: number },
+  ): Promise<Array<Setting>> {
+    const page = options?.page ?? 1;
+    const limit = options?.limit ?? 10;
+
+    const results = (await this.queryBuilder
+      .using('setting', { filter: { group: type }, page, limit })
+      .allowedFilters(['group'])
+      .execute()) as Setting[];
+
+    return results;
   }
 
   async createOrUpdate(group: string, dto: Record<string, any>) {
@@ -145,15 +148,18 @@ export class SettingService {
         }
       }
 
-      await this.queryBuilder.createOrUpdate({
-        table: 'setting',
+      await this.prisma.setting.upsert({
         where: {
           group_key: {
             group,
             key,
           },
         },
-        data: {
+        update: {
+          value: finalValue,
+          is_sensitive: isSensitive,
+        },
+        create: {
           group,
           key,
           value: finalValue,

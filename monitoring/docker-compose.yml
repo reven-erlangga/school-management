@@ -1,0 +1,152 @@
+name: monitoring-infra
+services:
+  node-exporter:
+    image: quay.io/prometheus/node-exporter:v1.8.1
+    container_name: node-exporter
+    # ports:
+    #   - "9110:9100"
+    volumes:
+      - "/proc:/host/proc:ro"
+      - "/sys:/host/sys:ro"
+      - "/:/rootfs:ro"
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--path.rootfs=/rootfs"
+    restart: unless-stopped
+    networks:
+      - infra-network
+
+  netdata:
+    image: netdata/netdata:v2.8.1
+    container_name: netdata
+    init: true
+    # ports:
+    #   - "19999:19999"
+    cap_add:
+      - SYS_PTRACE
+      - SYS_ADMIN
+    security_opt:
+      - apparmor=unconfined
+    volumes:
+      - "netdata-lib:/var/lib/netdata"
+      - "./netdata/cache:/var/cache/netdata"
+      - "./netdata/go.d:/etc/netdata/go.d:ro"
+      - "/proc:/host/proc:ro"
+      - "/sys:/host/sys:ro"
+      - "/etc/passwd:/host/etc/passwd:ro"
+      - "/etc/group:/host/etc/group:ro"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    restart: unless-stopped
+    networks:
+      - infra-network
+
+  prometheus:
+    image: prom/prometheus:v3.8.0
+    container_name: monitoring-prometheus
+    # ports:
+    #   - "9090:9090"
+    volumes:
+      - "./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro"
+      - "prometheus-data:/prometheus"
+    restart: unless-stopped
+    depends_on:
+      - node-exporter
+    networks:
+      - infra-network
+      - asset-network
+
+  postgres:
+    image: postgres:18
+    container_name: monitoring-postgres
+    # ports:
+    #   - "5437:5432"
+    environment:
+      POSTGRES_DB: ${GF_DATABASE_NAME:-grafana}
+      POSTGRES_USER: ${GF_DATABASE_USER:-grafana}
+      POSTGRES_PASSWORD: ${GF_DATABASE_PASSWORD:-grafana}
+    volumes:
+      - monitoring-postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+    networks:
+      - infra-network
+
+  grafana:
+    image: grafana/grafana:12.3.0
+    container_name: monitoring-grafana
+    # ports:
+    #   - "3010:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:-admin}
+      GF_DATABASE_TYPE: postgres
+      GF_DATABASE_HOST: postgres:5432
+      GF_DATABASE_NAME: ${GF_DATABASE_NAME:-grafana}
+      GF_DATABASE_USER: ${GF_DATABASE_USER:-grafana}
+      GF_DATABASE_PASSWORD: ${GF_DATABASE_PASSWORD:-grafana}
+      GF_DATABASE_SSL_MODE: disable
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning/datasources/datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml:ro
+      - ./grafana/provisioning/dashboards/dashboard.yml:/etc/grafana/provisioning/dashboards/dashboard.yml:ro
+      - ./grafana/provisioning/dashboards/json:/etc/grafana/provisioning/dashboards/json:ro
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+    networks:
+      - infra-network
+
+  loki:
+    image: grafana/loki:2.9.8
+    container_name: monitoring-loki
+    # ports:
+    #   - "3100:3100"
+    command: ["-config.file=/etc/loki/config.yml"]
+    volumes:
+      - ./loki/config.yml:/etc/loki/config.yml:ro
+      - loki-data:/loki
+    restart: unless-stopped
+    networks:
+      - infra-network
+
+  promtail:
+    image: grafana/promtail:2.9.8
+    container_name: monitoring-promtail
+    command: ["-config.file=/etc/promtail/config.yml"]
+    volumes:
+      - ./promtail/config.yml:/etc/promtail/config.yml:ro
+      - /var/log:/var/log:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    restart: unless-stopped
+    depends_on:
+      - loki
+    networks:
+      - infra-network
+
+volumes:
+  prometheus-data:
+  grafana-data:
+  netdata-lib:
+  netdata-cache:
+  monitoring-postgres-data:
+  loki-data:
+
+networks:
+  infra-network:
+    external: true
+    name: infra-network
+  asset-network:
+    external: true
+    name: asset-network

@@ -6,6 +6,8 @@ import { RedisModule } from './redis/redis.module';
 import { MinioModule } from './minio/minio.module';
 import { SeederModule } from './seeder/seeder.module';
 import { VaultModule } from './vault/vault.module';
+import { GenerateService } from './utils/generate.service';
+import { UtilsModule } from './utils/utils.module';
 
 @Global()
 @Module({
@@ -17,6 +19,7 @@ import { VaultModule } from './vault/vault.module';
     MinioModule,
     SeederModule,
     VaultModule,
+    UtilsModule,
   ],
   exports: [
     PrismaModule,
@@ -25,5 +28,6 @@ import { VaultModule } from './vault/vault.module';
     MinioModule,
     VaultModule,
   ],
+  providers: [GenerateService],
 })
 export class CommonModule {}

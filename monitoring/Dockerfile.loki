@@ -1,0 +1,5 @@
+FROM grafana/loki:2.9.8
+
+USER root
+COPY ./loki/config.yml /etc/loki/config.yml
+USER loki

@@ -1,0 +1,17 @@
+services:
+  documentation:
+    image: school-management/documentation:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MKDOCS_MATERIAL_TAG: "9"
+    ports:
+      - "8000:80"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/ >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

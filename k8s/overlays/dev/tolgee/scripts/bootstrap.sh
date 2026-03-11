@@ -8,20 +8,45 @@ NAMESPACE="${NAMESPACE:-school-management-dev}"
 ADMIN_USER="${TOLGEE_AUTHENTICATION_INITIAL_USERNAME:-admin}"
 ADMIN_PASS="${TOLGEE_AUTHENTICATION_INITIAL_PASSWORD:-}"
 
+SA_HOST="${KUBERNETES_SERVICE_HOST:-kubernetes.default.svc}"
+SA_PORT="${KUBERNETES_SERVICE_PORT:-443}"
+SA_TOKEN="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token 2>/dev/null || true)"
+SA_CA="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+
+if [ -n "$SA_TOKEN" ]; then
+  code="$(curl -sS --cacert "$SA_CA" -o /dev/null -w "%{http_code}" \
+    -H "Authorization: Bearer ${SA_TOKEN}" \
+    "https://${SA_HOST}:${SA_PORT}/apis/apps/v1/namespaces/${NAMESPACE}/deployments/tolgee" || true)"
+  if [ "$code" = "404" ]; then
+    echo "Tolgee deployment not found in namespace ${NAMESPACE}, skipping Tolgee bootstrap."
+    exit 0
+  fi
+  if [ "$code" -lt 200 ] || [ "$code" -ge 300 ]; then
+    echo "Unable to check Tolgee deployment via Kubernetes API (HTTP ${code})." >&2
+    exit 1
+  fi
+fi
+
 if [ -z "$ADMIN_PASS" ]; then
   echo "Missing TOLGEE_AUTHENTICATION_INITIAL_PASSWORD in environment" >&2
   exit 1
 fi
 
 echo "Waiting for Tolgee to be healthy at ${TOLGEE_URL} ..."
+healthy="0"
 for i in $(seq 1 120); do
-  status="$(curl -sS "${TOLGEE_URL%/}/actuator/health" | sed -n 's/.*\"status\"[[:space:]]*:[[:space:]]*\"\([A-Za-z]*\)\".*/\1/p' || true)"
+  status="$(curl -fsS --connect-timeout 2 --max-time 5 "${TOLGEE_URL%/}/actuator/health" 2>/dev/null | sed -n 's/.*\"status\"[[:space:]]*:[[:space:]]*\"\([A-Za-z]*\)\".*/\1/p' || true)"
   if [ "$status" = "UP" ] || [ "$status" = "ok" ] || [ "$status" = "OK" ]; then
     echo "Tolgee is healthy"
+    healthy="1"
     break
   fi
   sleep 2
 done
+if [ "$healthy" != "1" ]; then
+  echo "Tolgee is not healthy after 240s, aborting bootstrap." >&2
+  exit 1
+fi
 
 echo "Logging in to Tolgee ..."
 JWT="$(curl -sS -X POST -H 'Content-Type: application/json' \

@@ -2,7 +2,7 @@
   import { fade } from "svelte/transition";
   import TextField from "@components/svelte/atoms/TextField.svelte";
   import { onMount } from "svelte";
-    import { serverForm } from "../../../stores/server-form.store";
+  import { serverForm } from "../../../stores/server-form.store";
 
   const { handleInput, loadData } = serverForm;
 
@@ -14,50 +14,52 @@
 <div class="p-8 space-y-6" in:fade={{ duration: 300 }}>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     <TextField
-      id="mailServer.host"
+      id="host"
       label="HOST"
       placeholder="e.g. smtp.gmail.com"
-      value={$serverForm.values.mailServer.host}
-      error={$serverForm.errors["mailServer.host"]}
+      value={$serverForm.values.host}
+      error={$serverForm.errors["host"]}
       required
-      onValueChange={(val) => handleInput("mailServer.host", val)}
+      onValueChange={(val) => handleInput("host", val)}
     />
     <TextField
-      id="mailServer.port"
+      id="port"
       label="PORT"
       placeholder="e.g. 587"
-      value={$serverForm.values.mailServer.port}
-      error={$serverForm.errors["mailServer.port"]}
+      value={$serverForm.values.port}
+      error={$serverForm.errors["port"]}
       required
-      onValueChange={(val) => handleInput("mailServer.port", val)}
+      onValueChange={(val) => handleInput("port", val)}
     />
   </div>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     <TextField
-      id="mailServer.username"
+      id="username"
       label="USERNAME"
       placeholder="Enter SMTP username"
-      value={$serverForm.values.mailServer.username}
-      error={$serverForm.errors["mailServer.username"]}
+      value={$serverForm.values.username}
+      error={$serverForm.errors["username"]}
       required
-      onValueChange={(val) => handleInput("mailServer.username", val)}
+      onValueChange={(val) => handleInput("username", val)}
     />
     <TextField
-      id="mailServer.password"
+      id="password"
       label="PASSWORD"
       placeholder="Enter SMTP password"
-      value={$serverForm.values.mailServer.password}
-      error={$serverForm.errors["mailServer.password"]}
-      onValueChange={(val) => handleInput("mailServer.password", val)}
+      type="password"
+      value={$serverForm.values.password}
+      error={$serverForm.errors["password"]}
+      onValueChange={(val) => handleInput("password", val)}
     />
   </div>
   <TextField
-    id="mailServer.fromEmail"
+    id="fromEmail"
     label="FROM EMAIL"
     placeholder="e.g. noreply@school.com"
-    value={$serverForm.values.mailServer.fromEmail}
-    error={$serverForm.errors["mailServer.fromEmail"]}
+    type="email"
+    value={$serverForm.values.fromEmail}
+    error={$serverForm.errors["fromEmail"]}
     required
-    onValueChange={(val) => handleInput("mailServer.fromEmail", val)}
+    onValueChange={(val) => handleInput("fromEmail", val)}
   />
 </div>

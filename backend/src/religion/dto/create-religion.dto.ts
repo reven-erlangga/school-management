@@ -1,5 +1,24 @@
-import { IsNotEmpty, IsOptional, IsString, IsBoolean } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsBoolean,
+  ValidateNested,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+
+export class TranslationJsonDto {
+  @ApiProperty({ example: 'Islam' })
+  @IsString()
+  @IsNotEmpty()
+  en: string;
+
+  @ApiProperty({ example: 'Islam' })
+  @IsString()
+  @IsNotEmpty()
+  id: string;
+}
 
 export class CreateReligionDto {
   @ApiProperty({ example: 'islam', description: 'Unique key for religion' })
@@ -7,19 +26,24 @@ export class CreateReligionDto {
   @IsNotEmpty()
   key: string;
 
-  @ApiProperty({ example: 'Islam', description: 'Name of the religion' })
-  @IsString()
+  @ApiProperty({
+    example: { en: 'Islam', id: 'Islam' },
+    description: 'Name translation JSON',
+  })
+  @ValidateNested()
+  @Type(() => TranslationJsonDto)
   @IsNotEmpty()
-  name: string;
+  name: TranslationJsonDto;
 
   @ApiProperty({
-    example: 'Islam religion',
-    description: 'Description of the religion',
+    example: { en: 'Islamic Faith', id: 'Agama Islam' },
+    description: 'Description translation JSON',
     required: false,
   })
-  @IsString()
+  @ValidateNested()
+  @Type(() => TranslationJsonDto)
   @IsOptional()
-  description?: string;
+  description?: TranslationJsonDto;
 
   @ApiProperty({ example: true, description: 'Active status', required: false })
   @IsBoolean()

@@ -1,0 +1,10 @@
+FROM grafana/grafana:12.3.0
+
+USER root
+
+# Copy provisioning files
+COPY ./grafana/provisioning/datasources/datasource.yml /etc/grafana/provisioning/datasources/datasource.yml
+COPY ./grafana/provisioning/dashboards/dashboard.yml /etc/grafana/provisioning/dashboards/dashboard.yml
+COPY ./grafana/provisioning/dashboards/json /etc/grafana/provisioning/dashboards/json
+
+USER grafana

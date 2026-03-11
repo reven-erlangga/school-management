@@ -4,7 +4,6 @@ import {
   Body,
   UnauthorizedException,
   Get,
-  Header,
   Headers,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
@@ -24,9 +23,8 @@ export class AuthController {
     description: 'Return access and refresh tokens',
     type: AuthEntity,
   })
-  async login(@Body() body: any) {
+  async login(@Body() body: { username: string; password: string }) {
     const result = await this.authService.login(body.username, body.password);
-    console.log('[AuthController] Login result:', toResponse(result));
     return toResponse(result);
   }
 
@@ -45,12 +43,12 @@ export class AuthController {
 
   @Get('verify')
   @ApiOperation({ summary: 'Verify access token' })
-  async verify(@Headers() headers: any) {
-    const auth = headers.authorization || headers.Authorization;
-    if (!auth || !auth.startsWith('Bearer ')) {
+  async verify(@Headers() headers: Record<string, string | undefined>) {
+    const auth = headers.authorization ?? headers.Authorization;
+    if (typeof auth !== 'string' || !auth.startsWith('Bearer ')) {
       throw new UnauthorizedException('Access token is required');
     }
-    const token = auth.split(' ')[1];
+    const token = auth.replace(/^Bearer\s+/i, '').trim();
     const result = await this.authService.validateToken(token);
     return toResponse(result);
   }
