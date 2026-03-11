@@ -1,6 +1,7 @@
 name: Auto PR Template (Dev/Staging/Main)
 
 on:
+  workflow_dispatch:
   pull_request:
     types: [opened, reopened]
 
