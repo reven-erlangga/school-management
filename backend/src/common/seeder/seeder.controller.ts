@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Post,
-  Get,
-  Body,
-  Param,
-  Sse,
-  MessageEvent,
-} from '@nestjs/common';
+import { Controller, Post, Param, Sse, MessageEvent } from '@nestjs/common';
 import { SeederService } from './seeder.service';
 import { Observable, interval, from } from 'rxjs';
 import {
@@ -25,17 +17,20 @@ export class SeederController {
 
   @Post('run')
   @ApiOperation({ summary: 'Trigger a seeder job' })
-  async runSeeder(@Body('type') type: string) {
-    const result = await this.seederService.runSeeder(type);
+  async run() {
+    const result = await this.seederService.run();
     return toResponse(result, { message: 'Job triggered successfully' });
   }
 
-  @Sse('stream/:jobId')
+  @Sse('stream/:key')
   @ApiOperation({ summary: 'Stream job progress via SSE' })
-  streamJob(@Param('jobId') jobId: string): Observable<MessageEvent> {
+  stream(@Param('key') key: string): Observable<MessageEvent> {
+    const isRecord = (value: unknown): value is Record<string, unknown> =>
+      typeof value === 'object' && value !== null;
+
     return interval(200).pipe(
       // Poll every 200ms
-      switchMap(() => from(this.seederService.getJobStatus(jobId))),
+      switchMap(() => from(this.seederService.checkStatus(key))),
       distinctUntilChanged(
         (prev, curr) => JSON.stringify(prev) === JSON.stringify(curr),
       ),
@@ -47,35 +42,31 @@ export class SeederController {
                 {
                   status: '404',
                   title: 'Job Not Found',
-                  detail: `Job with ID ${jobId} not found`,
+                  detail: `Job with key ${key} not found`,
                 },
               ]),
             ),
           } as MessageEvent;
         }
 
-        const response = toResponse({
-          job_id: status.id,
-          progress: status.progress,
-          state: status.state,
-          result: status.result,
-          failed_reason: status.failedReason,
-        });
-
         return {
-          data: JSON.stringify(response),
+          data: JSON.stringify(toResponse(status)),
         } as MessageEvent;
       }),
       // Stop stream when completed or failed
-      takeWhile((event: any) => {
-        const responseData = JSON.parse(event.data);
+      takeWhile((event: MessageEvent) => {
+        if (typeof event.data !== 'string') return false;
+        const responseData = JSON.parse(event.data) as unknown;
+        if (!isRecord(responseData)) return false;
 
         // If it's an error response
-        if (responseData.errors) {
+        if (Array.isArray(responseData['errors'])) {
           return false;
         }
 
-        const state = responseData.data?.state;
+        const data = responseData['data'];
+        if (!isRecord(data)) return false;
+        const state = data['state'];
         return state !== 'completed' && state !== 'failed';
       }, true), // inclusive: true ensures the final 'completed' event is sent
     );

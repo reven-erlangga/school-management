@@ -1,73 +1,77 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { SeederService } from './seeder.service';
 import { getQueueToken } from '@nestjs/bullmq';
-import { Queue } from 'bullmq';
 import { SEEDER_QUEUE, SEED_JOB } from './queue/queue.config';
-
-jest.mock('uuid', () => ({ v4: () => 'job-uuid' }));
+import { SeederKeyService } from '../utils/seeder/seeder-key.service';
 
 describe('SeederService', () => {
   let service: SeederService;
-  let queue: Queue;
 
   const mockQueue = {
-    add: jest.fn().mockResolvedValue({ id: 'job-1' }),
-    getJob: jest.fn(),
-  } as any;
+    add: jest
+      .fn<
+        Promise<{ id: string }>,
+        [string, Record<string, unknown>, { jobId: string }]
+      >()
+      .mockResolvedValue({ id: 'job-1' }),
+    getJob: jest.fn<Promise<unknown>, [string]>(),
+  };
+
+  const mockSeederKeyService = {
+    generateUniqueKey: jest.fn<Promise<string>, []>(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SeederService,
         { provide: getQueueToken(SEEDER_QUEUE), useValue: mockQueue },
+        { provide: SeederKeyService, useValue: mockSeederKeyService },
       ],
     }).compile();
 
     service = module.get<SeederService>(SeederService);
-    queue = module.get<Queue>(getQueueToken(SEEDER_QUEUE));
 
     jest.clearAllMocks();
   });
 
-  it('enqueues a job with provided type', async () => {
-    const result = await service.runSeeder('all');
+  it('enqueues a job and returns key', async () => {
+    mockSeederKeyService.generateUniqueKey.mockResolvedValueOnce('abcd1234');
+    const result = await service.run();
 
-    expect(queue.add).toHaveBeenCalledWith(
-      SEED_JOB,
-      expect.objectContaining({
-        type: 'all',
-        timestamp: expect.any(String),
-      }),
-      expect.objectContaining({
-        jobId: 'job-uuid',
-      }),
-    );
+    expect(mockQueue.add).toHaveBeenCalledTimes(1);
+    const [name, payload, opts] = mockQueue.add.mock.calls[0];
+    expect(name).toBe(SEED_JOB);
+    const typedPayload = payload as { type?: unknown; timestamp?: unknown };
+    expect(typedPayload.type).toBe('all');
+    expect(typeof typedPayload.timestamp).toBe('string');
+    expect(opts).toEqual({ jobId: 'abcd1234' });
 
     expect(result).toEqual({
-      jobId: 'job-1',
+      key: 'abcd1234',
       message: 'Seeder job started for type - all',
     });
   });
 
   it('returns null when job is not found', async () => {
-    (mockQueue.getJob as jest.Mock).mockResolvedValueOnce(null);
-    const status = await service.getJobStatus('missing');
+    mockQueue.getJob.mockResolvedValueOnce(null);
+    const status = await service.checkStatus('missing');
     expect(status).toBeNull();
   });
 
   it('returns job status when job exists', async () => {
     const mockJob = {
       id: 'job-1',
-      getState: jest.fn().mockResolvedValue('active'),
+      getState: jest.fn<Promise<string>, []>().mockResolvedValue('active'),
       progress: { percent: 10, step: 'translations' },
       returnvalue: null,
       failedReason: null,
     };
-    (mockQueue.getJob as jest.Mock).mockResolvedValueOnce(mockJob);
+    mockQueue.getJob.mockResolvedValueOnce(mockJob);
 
-    const status = await service.getJobStatus('job-1');
+    const status = await service.checkStatus('job-1');
     expect(status).toEqual({
-      id: 'job-1',
+      key: 'job-1',
       state: 'active',
       progress: { percent: 10, step: 'translations' },
       result: null,

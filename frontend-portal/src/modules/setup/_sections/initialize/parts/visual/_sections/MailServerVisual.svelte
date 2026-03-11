@@ -20,19 +20,31 @@
         Set up SMTP host, port, credentials, and sender email so the portal can send notifications.
     {/snippet}
     {#snippet illustration()}
-        <div class="space-y-5">
-            {#each Array(5) as _}
+        <div class="h-[240px] overflow-hidden">
+            <div class="h-full flex flex-col justify-between">
+                <div class="space-y-5">
+                    {#each Array(4) as _}
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-full bg-slate-900/10 dark:bg-white/10"></div>
+
+                            <div class="flex-1 space-y-2">
+                                <div class="h-4 w-48 bg-slate-900/10 dark:bg-white/10 rounded"></div>
+                                <div class="h-4 w-72 bg-slate-900/10 dark:bg-white/10 rounded"></div>
+                            </div>
+
+                            <div class="h-4 w-12 bg-slate-900/10 dark:bg-white/10 rounded"></div>
+                        </div>
+                    {/each}
+                </div>
                 <div class="flex items-start gap-3">
                     <div class="w-10 h-10 rounded-full bg-slate-900/10 dark:bg-white/10"></div>
-
                     <div class="flex-1 space-y-2">
-                        <div class="h-4 w-48 bg-slate-900/10 dark:bg-white/10 rounded"></div>
-                        <div class="h-4 w-72 bg-slate-900/10 dark:bg-white/10 rounded"></div>
+                        <div class="h-4 w-40 bg-slate-900/10 dark:bg-white/10 rounded"></div>
+                        <div class="h-4 w-64 bg-slate-900/10 dark:bg-white/10 rounded"></div>
                     </div>
-
-                    <div class="h-4 w-12 bg-slate-900/10 dark:bg-white/10 rounded"></div>
+                    <div class="h-4 w-10 bg-slate-900/10 dark:bg-white/10 rounded"></div>
                 </div>
-            {/each}
+            </div>
         </div>
     {/snippet}
 </SideVisual>

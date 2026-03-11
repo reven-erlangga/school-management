@@ -50,7 +50,7 @@ describe('DeleteService', () => {
   });
 
   it('should throw NotFoundException if no rows affected', async () => {
-    (mockModel.updateMany as jest.Mock).mockResolvedValueOnce({ count: 0 });
+    mockModel.updateMany.mockResolvedValueOnce({ count: 0 });
     await expect(
       service.remove(mockModel, { id: '999', modelName: 'country' }),
     ).rejects.toThrow(NotFoundException);

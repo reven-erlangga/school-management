@@ -1,38 +1,33 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Repository, ObjectLiteral, FindOptionsWhere } from 'typeorm';
-import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
-import { transformKeysToSnakeCase } from '../../utils/transform.util';
+
+export type UpdateDelegate<T> = {
+  update: (args: {
+    where: Record<string, unknown>;
+    data: Record<string, unknown>;
+  }) => Promise<T>;
+};
 
 @Injectable()
 export class UpdateService {
-  async update<T extends ObjectLiteral>(
-    repository: Repository<T>,
-    id: string | number,
-    data: QueryDeepPartialEntity<T>,
+  async update<T>(
+    delegate: UpdateDelegate<T>,
+    where: Record<string, unknown>,
+    data: Record<string, unknown>,
+    modelName?: string,
   ): Promise<T> {
-    const transformedData = transformKeysToSnakeCase<Record<string, any>>(
-      data as Record<string, any>,
-    );
-
-    const result = await repository
-      .createQueryBuilder()
-      .update()
-      .set(transformedData)
-      .where('id = :id', { id })
-      .execute();
-
-    if (result.affected === 0) {
-      throw new NotFoundException(`Entity with ID ${id} not found`);
+    try {
+      return await delegate.update({ where, data });
+    } catch (error) {
+      const code =
+        error && typeof error === 'object' && 'code' in error
+          ? (error as { code?: unknown }).code
+          : undefined;
+      if (code === 'P2025') {
+        throw new NotFoundException(
+          `Entity${modelName ? ` in ${modelName}` : ''} not found`,
+        );
+      }
+      throw error;
     }
-
-    const entity = await repository.findOne({
-      where: { id } as unknown as FindOptionsWhere<T>,
-    });
-    if (!entity) {
-      throw new NotFoundException(
-        `Entity with ID ${id} not found after update`,
-      );
-    }
-    return entity;
   }
 }

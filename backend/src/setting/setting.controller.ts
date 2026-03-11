@@ -1,37 +1,36 @@
 import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { SettingService } from './setting.service';
-import { VaultService } from '../common/vault/vault.service';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { toResponse } from '../common/query-builder/interfaces/response.interface';
 
 @ApiTags('Settings')
 @Controller('settings')
 export class SettingController {
-  constructor(
-    private readonly settingService: SettingService,
-    private readonly vaultService: VaultService,
-  ) {}
-
-  @Get('public-config')
-  @ApiOperation({ summary: 'Get public configuration from Vault' })
-  async getPublicConfig() {
-    // We do NOT expose sensitive keys (like Tolgee API Key) here anymore.
-    // Frontend should use the /translations endpoint which proxies requests securely.
-    return {
-      // Add other public configs here if needed, but avoid keys
-      message: 'Public configuration endpoint',
-    };
-  }
+  constructor(private readonly settingService: SettingService) {}
 
   @Get(':group')
+  @ApiOperation({
+    summary: 'Get settings by group (sensitive values are masked)',
+  })
+  @ApiResponse({ status: 200 })
   findByGroup(@Param('group') group: string) {
-    return this.settingService.findByGroup(group);
+    return this.settingService
+      .findByGroup(group)
+      .then((data) => toResponse(data));
   }
 
   @Post(':group')
+  @ApiOperation({
+    summary:
+      'Create or update settings by group (auto-encrypts sensitive keys)',
+  })
+  @ApiResponse({ status: 200 })
   createOrUpdate(
     @Param('group') group: string,
     @Body() dto: Record<string, any>,
   ) {
-    return this.settingService.createOrUpdate(group, dto);
+    return this.settingService
+      .createOrUpdate(group, dto)
+      .then((data) => toResponse(data));
   }
 }

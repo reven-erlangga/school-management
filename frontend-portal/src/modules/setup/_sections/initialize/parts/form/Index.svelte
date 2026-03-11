@@ -2,7 +2,8 @@
     import StepIndicator from "@components/svelte/atoms/StepIndicator.svelte";
     import GeneralForm from "./_sections/GeneralForm.svelte";
     import MailServerForm from "./_sections/MailServerForm.svelte";
-    import SuperUserForm from "./_sections/SuperUserForm.svelte";
+    import XenditForm from "./_sections/XenditForm.svelte";
+    import SeedingCLI from "./_sections/SeedingCLI.svelte";
     import Card from "@components/svelte/atoms/Card.svelte";
     import Button from "@components/svelte/atoms/Button.svelte";
     import Icon from "@components/svelte/atoms/Icon.svelte";
@@ -14,7 +15,7 @@
     import { steps } from "../../const/step.const";
     import { generalForm } from "../../stores/general-form.store";
     import { serverForm } from "../../stores/server-form.store";
-    import { superuserForm } from "../../stores/superuser-form.store";
+    import { xenditForm } from "../../stores/xendit-form.store";
 </script>
 
 <div class="px-8 w-full h-full flex items-center justify-center">
@@ -29,8 +30,10 @@
                     <GeneralForm />
                 {:else if $stage === Stage.MailServer}
                     <MailServerForm />
-                {:else if $stage === Stage.SuperUser}
-                    <SuperUserForm />
+                {:else if $stage === Stage.Xendit}
+                    <XenditForm />
+                {:else if $stage === Stage.Seeding}
+                    <SeedingCLI />
                 {:else}
                     <div
                         class="p-12 flex flex-col items-center justify-center text-center space-y-4"
@@ -90,7 +93,7 @@
                             {$serverForm.meta.loading ? "Saving..." : "Next"}
                         </Button>
                     </div>
-                {:else if $stage === Stage.SuperUser}
+                {:else if $stage === Stage.Xendit}
                     <div class="flex items-center justify-between">
                         <Button variant="ghost" onclick={() => stage.back()}
                             >Back</Button
@@ -98,13 +101,11 @@
                         <Button
                             variant="primary"
                             size="lg"
-                            onclick={superuserForm.submit}
-                            disabled={$superuserForm.meta.loading}
+                            onclick={xenditForm.submit}
+                            disabled={$xenditForm.meta.loading}
                             class="px-8"
                         >
-                            {$superuserForm.meta.loading
-                                ? "Saving..."
-                                : "Finish Setup"}
+                            {$xenditForm.meta.loading ? "Saving..." : "Next"}
                         </Button>
                     </div>
                 {/if}

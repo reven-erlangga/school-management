@@ -1,0 +1,12 @@
+:root {
+  --md-primary-fg-color: #4f46e5;
+  --md-accent-fg-color: #6366f1;
+}
+
+.md-header {
+  backdrop-filter: saturate(150%) blur(10px);
+}
+
+.md-main__inner {
+  max-width: 1100px;
+}

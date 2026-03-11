@@ -20,19 +20,31 @@
         Configure foundation identity, branding, and basic profile information.
     {/snippet}
     {#snippet illustration()}
-        <div class="space-y-5">
-            <div class="h-6 w-82 bg-slate-900/10 dark:bg-white/10 rounded-lg"></div>
+        <div class="h-[240px] overflow-hidden">
+            <div class="h-full flex flex-col justify-between">
+                <div class="space-y-5">
+                    <div class="h-6 w-82 bg-slate-900/10 dark:bg-white/10 rounded-lg"></div>
 
-            {#each Array(2) as _}
+                    {#each Array(2) as _}
+                        <div class="grid grid-cols-3 gap-3">
+                            {#each [40, 32, 48, 24, 36] as w}
+                                <div
+                                    class="h-6 bg-slate-900/10 dark:bg-white/10 rounded-lg mb-2"
+                                    style={`width:${w * 4}px`}
+                                ></div>
+                            {/each}
+                        </div>
+                    {/each}
+                </div>
                 <div class="grid grid-cols-3 gap-3">
-                    {#each [40, 32, 48, 24, 36] as w}
+                    {#each [44, 28, 36] as w}
                         <div
-                            class="h-6 bg-slate-900/10 dark:bg-white/10 rounded-lg mb-2"
+                            class="h-6 bg-slate-900/10 dark:bg-white/10 rounded-lg"
                             style={`width:${w * 4}px`}
                         ></div>
                     {/each}
                 </div>
-            {/each}
+            </div>
         </div>
     {/snippet}
 </SideVisual>

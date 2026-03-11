@@ -1,14 +1,19 @@
+export type TranslationJson = {
+  en: string;
+  id: string;
+};
+
 export class Religion {
   id: string;
   key: string;
-  name: string;
-  description?: string;
+  name: TranslationJson;
+  description?: TranslationJson;
   is_active: boolean;
   created_at: Date;
   updated_at: Date;
 
   static get allowedSorts() {
-    return ['name', 'key', 'created_at', 'updated_at'];
+    return ['key', 'created_at', 'updated_at'];
   }
 
   static get allowedFields() {
@@ -24,7 +29,7 @@ export class Religion {
   }
 
   static get allowedFilters() {
-    return ['name', 'key', 'is_active'];
+    return ['key', 'is_active'];
   }
 
   static get allowedIncludes() {

@@ -1,7 +1,8 @@
 <script lang="ts">
   import Button from "@components/svelte/atoms/Button.svelte";
   import InitializeSection from "./_sections/initialize/Index.svelte";
-  import SeederSection from "./_sections/seeder/Index.svelte"
+  import StarterSection from "./_sections/starter/Index.svelte"
+  import RegisterSection from "./_sections/register/Index.svelte";
   import { screen, toggleScreen } from "./stores/pages.store";
 </script>
 
@@ -10,15 +11,17 @@
 >
   <div class="absolute top-4 left-1/2 -translate-x-1/2 z-50">
     <Button onclick={toggleScreen}>
-      Switch to {$screen === "initialize" ? "Seeder" : "Initialize"}
+      Switch to {$screen === "initialize" ? "Starter" : $screen === "starter" ? "Register" : "Initialize"}
     </Button>
   </div>
 
   <div class="hidden lg:block w-full relative">
     {#if $screen === "initialize"}
-    <InitializeSection />
+      <InitializeSection />
+    {:else if $screen === "starter"}
+      <StarterSection />
     {:else}
-    <SeederSection />
+      <RegisterSection />
     {/if}
   </div>
 

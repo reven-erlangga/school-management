@@ -33,7 +33,7 @@ describe('FindOneService', () => {
   });
 
   it('returns result without cache when useCache=false', async () => {
-    (mockModel.findUnique as jest.Mock).mockResolvedValue({ id: '1' });
+    mockModel.findUnique.mockResolvedValue({ id: '1' });
     const res = await service.findOne(mockModel, {
       where: { id: '1' },
     });
@@ -55,7 +55,7 @@ describe('FindOneService', () => {
 
   it('sets cache on miss', async () => {
     (mockRedis.get as jest.Mock).mockResolvedValue(null);
-    (mockModel.findUnique as jest.Mock).mockResolvedValue({ id: '1' });
+    mockModel.findUnique.mockResolvedValue({ id: '1' });
     await service.findOne(mockModel, {
       where: { id: '1' },
       select: { id: true },

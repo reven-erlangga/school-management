@@ -1,7 +1,64 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+
+type GeographicalCity = {
+  name: string;
+  latitude?: string | null;
+  longitude?: string | null;
+};
+
+type GeographicalState = {
+  name: string;
+  state_code?: string | null;
+  latitude?: string | null;
+  longitude?: string | null;
+  cities?: GeographicalCity[] | null;
+};
+
+type GeographicalCountry = {
+  name: string;
+  iso3: string;
+  iso2: string;
+  phone_code?: string | null;
+  capital?: string | null;
+  currency?: string | null;
+  currency_symbol?: string | null;
+  tld?: string | null;
+  native?: string | null;
+  region?: string | null;
+  subregion?: string | null;
+  timezones?: unknown;
+  translations?: unknown;
+  latitude?: string | null;
+  longitude?: string | null;
+  emoji?: string | null;
+  emojiU?: string | null;
+  states?: GeographicalState[] | null;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+const isString = (value: unknown): value is string => typeof value === 'string';
+
+const parseCountries = (value: unknown): GeographicalCountry[] => {
+  if (!Array.isArray(value)) return [];
+  const out: GeographicalCountry[] = [];
+
+  for (const item of value) {
+    if (!isRecord(item)) continue;
+    if (!isString(item.name) || !isString(item.iso3) || !isString(item.iso2)) {
+      continue;
+    }
+
+    out.push(item as unknown as GeographicalCountry);
+  }
+
+  return out;
+};
 
 @Injectable()
 export class GeographicalService {
@@ -16,12 +73,13 @@ export class GeographicalService {
     let fileContent: string;
     try {
       fileContent = await fs.readFile(filePath, 'utf-8');
-    } catch (error) {
-      this.logger.error(`Failed to read geographical.json: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to read geographical.json: ${message}`);
       throw error;
     }
 
-    const countries = JSON.parse(fileContent);
+    const countries = parseCountries(JSON.parse(fileContent) as unknown);
     const totalCountries = countries.length;
 
     this.logger.log(
@@ -42,15 +100,13 @@ export class GeographicalService {
     for (let i = 0; i < totalCountries; i++) {
       const countryData = countries[i];
 
-      const existingCountry = await (this.prisma as any).country.findFirst({
+      const existingCountry = await this.prisma.country.findFirst({
         where: { iso3: countryData.iso3 },
       });
 
-      const countryId = existingCountry?.id;
-
       const country = existingCountry
-        ? await (this.prisma as any).country.update({
-            where: { id: countryId },
+        ? await this.prisma.country.update({
+            where: { id: existingCountry.id },
             data: {
               name: countryData.name,
               iso3: countryData.iso3,
@@ -63,15 +119,16 @@ export class GeographicalService {
               native: countryData.native,
               region: countryData.region,
               subregion: countryData.subregion,
-              timezones: countryData.timezones ?? [],
-              translations: countryData.translations ?? {},
+              timezones: (countryData.timezones ?? []) as Prisma.InputJsonValue,
+              translations: (countryData.translations ??
+                {}) as Prisma.InputJsonValue,
               latitude: countryData.latitude,
               longitude: countryData.longitude,
               emoji: countryData.emoji,
               emojiU: countryData.emojiU,
             },
           })
-        : await (this.prisma as any).country.create({
+        : await this.prisma.country.create({
             data: {
               name: countryData.name,
               iso3: countryData.iso3,
@@ -84,8 +141,9 @@ export class GeographicalService {
               native: countryData.native,
               region: countryData.region,
               subregion: countryData.subregion,
-              timezones: countryData.timezones ?? [],
-              translations: countryData.translations ?? {},
+              timezones: (countryData.timezones ?? []) as Prisma.InputJsonValue,
+              translations: (countryData.translations ??
+                {}) as Prisma.InputJsonValue,
               latitude: countryData.latitude,
               longitude: countryData.longitude,
               emoji: countryData.emoji,
@@ -101,15 +159,15 @@ export class GeographicalService {
 
       processedCountries++;
 
-      await (this.prisma as any).state.deleteMany({
+      await this.prisma.state.deleteMany({
         where: {
           country_id: country.id,
         },
       });
 
-      if (countryData.states && countryData.states.length > 0) {
+      if (Array.isArray(countryData.states) && countryData.states.length > 0) {
         for (const stateData of countryData.states) {
-          const state = await (this.prisma as any).state.create({
+          const state = await this.prisma.state.create({
             data: {
               name: stateData.name,
               state_code: stateData.state_code,
@@ -120,9 +178,9 @@ export class GeographicalService {
           });
           seededStates++;
 
-          if (stateData.cities && stateData.cities.length > 0) {
-            await (this.prisma as any).city.createMany({
-              data: stateData.cities.map((cityData: any) => ({
+          if (Array.isArray(stateData.cities) && stateData.cities.length > 0) {
+            await this.prisma.city.createMany({
+              data: stateData.cities.map((cityData) => ({
                 name: cityData.name,
                 latitude: cityData.latitude,
                 longitude: cityData.longitude,

@@ -1,0 +1,5 @@
+FROM prom/prometheus:v3.8.0
+
+USER root
+COPY ./prometheus/prometheus.yml /etc/prometheus/prometheus.yml
+USER nobody

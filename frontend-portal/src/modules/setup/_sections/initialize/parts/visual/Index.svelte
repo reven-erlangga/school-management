@@ -2,7 +2,8 @@
     import { stage, Stage } from "../../stores/stage.store";
     import GeneralVisual from "./_sections/GeneralVisual.svelte";
     import MailServerVisual from "./_sections/MailServerVisual.svelte";
-    import SuperUserVisual from "./_sections/SuperUserVisual.svelte";
+    import XenditVisual from "./_sections/XenditVisual.svelte";
+    import SeedingVisual from "./_sections/SeedingVisual.svelte";
 </script>
 
 <div class="hidden lg:block w-full h-full relative">
@@ -26,10 +27,20 @@
 
     <div
         class="absolute inset-0 transition-opacity duration-300"
-        class:opacity-100={$stage === Stage.SuperUser}
-        class:opacity-0={$stage !== Stage.SuperUser}
-        class:pointer-events-none={$stage !== Stage.SuperUser}
+        class:opacity-100={$stage === Stage.Xendit}
+        class:opacity-0={$stage !== Stage.Xendit}
+        class:pointer-events-none={$stage !== Stage.Xendit}
     >
-        <SuperUserVisual />
+        <XenditVisual />
     </div>
+
+    <div
+        class="absolute inset-0 transition-opacity duration-300"
+        class:opacity-100={$stage === Stage.Seeding}
+        class:opacity-0={$stage !== Stage.Seeding}
+        class:pointer-events-none={$stage !== Stage.Seeding}
+    >
+        <SeedingVisual />
+    </div>
+
 </div>

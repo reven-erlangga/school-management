@@ -22,6 +22,14 @@ export interface GeneralFormState {
         loading: boolean;
         isValid: boolean;
         error: string | null;
+        original?: {
+            foundationName: string;
+            appName: string;
+            shortName: string;
+            description: string;
+            logoUrl?: string | null;
+            faviconUrl?: string | null;
+        };
     };
 }
 
@@ -90,7 +98,18 @@ const createGeneralFormStore = () => {
                     logoUrl: data.logoUrl || null,
                     faviconUrl: data.faviconUrl || null
                 },
-                meta: { ...s.meta, loading: false }
+                meta: { 
+                    ...s.meta, 
+                    loading: false,
+                    original: {
+                        foundationName: data.foundationName || '',
+                        appName: data.appName || '',
+                        shortName: data.shortName || '',
+                        description: data.description || '',
+                        logoUrl: data.logoUrl || null,
+                        faviconUrl: data.faviconUrl || null
+                    }
+                }
             }));
         } catch (error) {
             update(s => ({ ...s, meta: { ...s.meta, loading: false, error: null } }));
@@ -104,6 +123,25 @@ const createGeneralFormStore = () => {
             update(s => ({ ...s, meta: { ...s.meta, loading: true, error: '' } }));
             
             await validationSchema.validate(state.values, { abortEarly: false });
+
+            const original = state.meta.original;
+            const logoChanged = !!(state.values.logo && state.values.logo.length > 0);
+            const faviconChanged = !!(state.values.favicon && state.values.favicon.length > 0);
+            const textChanged = original
+                ? (
+                    state.values.foundationName !== original.foundationName ||
+                    state.values.appName !== original.appName ||
+                    state.values.shortName !== original.shortName ||
+                    (state.values.description || '') !== (original.description || '')
+                  )
+                : true;
+            const hasChanges = textChanged || logoChanged || faviconChanged;
+
+            if (!hasChanges) {
+                update(s => ({ ...s, meta: { ...s.meta, loading: false } }));
+                stage.next();
+                return;
+            }
             
             await configurationService.saveGeneralSettings({
                 foundationName: state.values.foundationName,

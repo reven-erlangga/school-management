@@ -2,38 +2,39 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { SEEDER_QUEUE, SEED_JOB } from './queue/queue.config';
-import { v4 as uuidv4 } from 'uuid';
+import { SeederKeyService } from '../utils/seeder/seeder-key.service';
 
 @Injectable()
 export class SeederService {
   private readonly logger = new Logger(SeederService.name);
 
-  constructor(@InjectQueue(SEEDER_QUEUE) private seederQueue: Queue) {}
+  constructor(
+    @InjectQueue(SEEDER_QUEUE) private seederQueue: Queue,
+    private readonly seederKeyService: SeederKeyService,
+  ) {}
 
   /**
    * Trigger a new seeder job
-   * @param type Type of seed to run (e.g., 'users', 'settings', 'all')
    * @returns Job ID
    */
-  async runSeeder(
-    type: string = 'all',
-  ): Promise<{ jobId: string; message: string }> {
-    const jobId = uuidv4();
-    const job = await this.seederQueue.add(
+  async run(): Promise<{ key: string; message: string }> {
+    const type = 'all';
+    const key = await this.seederKeyService.generateUniqueKey();
+    await this.seederQueue.add(
       SEED_JOB,
       {
         type,
         timestamp: new Date().toISOString(),
       },
       {
-        jobId: jobId, // Explicitly set custom UUID
+        jobId: key,
       },
     );
 
-    this.logger.log(`Seeder job triggered: ${job.id} (Type: ${type})`);
+    this.logger.log(`Seeder job triggered: ${key} (Type: ${type})`);
 
     return {
-      jobId: job.id || jobId,
+      key,
       message: `Seeder job started for type - ${type}`,
     };
   }
@@ -41,8 +42,14 @@ export class SeederService {
   /**
    * Get job status and progress
    */
-  async getJobStatus(jobId: string) {
-    const job = await this.seederQueue.getJob(jobId);
+  async checkStatus(key: string): Promise<{
+    key: string;
+    state: string;
+    progress: unknown;
+    result: unknown;
+    failedReason: string | null;
+  } | null> {
+    const job = await this.seederQueue.getJob(key);
     if (!job) {
       return null;
     }
@@ -51,7 +58,7 @@ export class SeederService {
     const progress = job.progress;
 
     return {
-      id: job.id,
+      key,
       state,
       progress,
       result: job.returnvalue,

@@ -1,3 +1,4 @@
 export * from './types';
 export * from './errors';
-export * from './QueryBuilder';
+export * from './query-builder.service';
+export * from './query-builder.module';

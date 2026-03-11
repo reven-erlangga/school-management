@@ -28,5 +28,5 @@ spec:
     - protocol: TCP
       port: 8200
       targetPort: 8200
-      nodePort: 30005
+      nodePort: 32001
       name: vault-port
