@@ -1,0 +1,110 @@
+name: Auto Tag Version (staging -> main)
+
+on:
+  pull_request:
+    branches: ["main"]
+    types: [closed]
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    if: |
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.head.ref == 'staging' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          filters: |
+            docs:
+              - "documentation/**"
+
+      - name: Compute next version tag
+        id: version
+        if: steps.changes.outputs.docs == 'true'
+        shell: bash
+        env:
+          PR_LABELS_JSON: ${{ toJson(github.event.pull_request.labels) }}
+        run: |
+          set -euo pipefail
+
+          bump="patch"
+          if echo "${PR_LABELS_JSON}" | jq -e 'any(.[]; .name == "major")' >/dev/null; then
+            bump="major"
+          elif echo "${PR_LABELS_JSON}" | jq -e 'any(.[]; .name == "minor")' >/dev/null; then
+            bump="minor"
+          elif echo "${PR_LABELS_JSON}" | jq -e 'any(.[]; .name == "patch")' >/dev/null; then
+            bump="patch"
+          fi
+
+          pre=""
+          if echo "${PR_LABELS_JSON}" | jq -e 'any(.[]; .name == "alpha" or .name == "pre-alpha")' >/dev/null; then
+            pre="alpha"
+          elif echo "${PR_LABELS_JSON}" | jq -e 'any(.[]; .name == "beta" or .name == "pre-beta")' >/dev/null; then
+            pre="beta"
+          elif echo "${PR_LABELS_JSON}" | jq -e 'any(.[]; .name == "rc" or .name == "release-candidate" or .name == "pre-rc")' >/dev/null; then
+            pre="rc"
+          fi
+
+          latest="$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n 1 || true)"
+          if [[ -z "${latest}" ]]; then
+            major=0
+            minor=0
+            patch=0
+          else
+            ver="${latest#v}"
+            IFS='.' read -r major minor patch <<< "${ver}"
+          fi
+
+          case "${bump}" in
+            major)
+              major=$((major + 1)); minor=0; patch=0 ;;
+            minor)
+              minor=$((minor + 1)); patch=0 ;;
+            patch)
+              patch=$((patch + 1)) ;;
+          esac
+
+          base="${major}.${minor}.${patch}"
+          tag="v${base}"
+
+          if [[ -n "${pre}" ]]; then
+            last_n="$(git tag --list "v${base}-${pre}.*" | sed -E "s/^v${base}-${pre}\.//" | grep -E '^[0-9]+$' | sort -n | tail -n 1 || true)"
+            if [[ -z "${last_n}" ]]; then
+              n=1
+            else
+              n=$((last_n + 1))
+            fi
+            tag="v${base}-${pre}.${n}"
+          fi
+
+          if git rev-parse -q --verify "refs/tags/${tag}" >/dev/null; then
+            echo "Tag ${tag} already exists. Skipping."
+            echo "tag=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "bump=${bump}" >> "$GITHUB_OUTPUT"
+          echo "pre=${pre}" >> "$GITHUB_OUTPUT"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+
+      - name: Create and push tag
+        if: steps.version.outputs.tag != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          tag="${{ steps.version.outputs.tag }}"
+          git tag -a "${tag}" -m "Release ${tag}"
+          git push origin "${tag}"
