@@ -29,6 +29,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_PAT }}
 
+      - name: Compute image tags
+        id: vars
+        shell: bash
+        run: |
+          echo "ref_name_sanitized=${GITHUB_REF_NAME//\//-}" >> "$GITHUB_OUTPUT"
+
       - uses: docker/build-push-action@v5
         with:
           context: ./documentation
@@ -36,4 +42,4 @@ jobs:
           push: true
           tags: |
             ghcr.io/${{ github.repository }}-docs:latest
-            ghcr.io/${{ github.repository }}-docs:${{ replace(github.ref_name, '/', '-') }}
+            ghcr.io/${{ github.repository }}-docs:${{ steps.vars.outputs.ref_name_sanitized }}
