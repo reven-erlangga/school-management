@@ -17,13 +17,14 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.PR_BOT_TOKEN }}
+          GHCR_PAT: ${{ secrets.GHCR_PAT }}
           GITHUB_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           REF_NAME: ${{ github.ref_name }}
         run: |
           set -euo pipefail
 
-          token="${GH_TOKEN:-${GITHUB_TOKEN}}"
+          token="${GH_TOKEN:-${GHCR_PAT:-${GITHUB_TOKEN}}}"
           export GH_TOKEN="${token}"
 
           head="${REF_NAME}"
