@@ -41,5 +41,5 @@ jobs:
           file: ./documentation/Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}-docs:latest
-            ghcr.io/${{ github.repository }}-docs:${{ steps.vars.outputs.ref_name_sanitized }}
+            ghcr.io/${{ github.repository }}/docs:latest
+            ghcr.io/${{ github.repository }}/docs:${{ steps.vars.outputs.ref_name_sanitized }}
