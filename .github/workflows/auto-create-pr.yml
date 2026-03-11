@@ -1,0 +1,106 @@
+name: Auto Create Promotion PRs
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["dev", "staging"]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  open-or-update-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Open or update PR
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          head="${REF_NAME}"
+          base=""
+          flow=""
+
+          if [[ "${head}" == "dev" ]]; then
+            base="staging"
+            flow="dev -> staging"
+          elif [[ "${head}" == "staging" ]]; then
+            base="main"
+            flow="staging -> main"
+          else
+            echo "Unsupported branch: ${head}"
+            exit 0
+          fi
+
+          compare="$(gh api "repos/${REPO}/compare/${base}...${head}")"
+          status="$(echo "${compare}" | jq -r '.status')"
+          files_changed="$(echo "${compare}" | jq -r '.files | length')"
+          commits_count="$(echo "${compare}" | jq -r '.commits | length')"
+
+          if [[ "${status}" == "identical" || "${files_changed}" == "0" ]]; then
+            echo "No diff between ${base} and ${head}. Skipping."
+            exit 0
+          fi
+
+          files_list="$(echo "${compare}" | jq -r '.files[] | "\(.status)\t\(.filename)"' | head -n 10 || true)"
+          files_more=$((files_changed - $(echo "${files_list}" | sed '/^\s*$/d' | wc -l | tr -d ' ') ))
+          if [[ "${files_more}" -lt 0 ]]; then files_more=0; fi
+
+          areas_raw="$(echo "${compare}" | jq -r '.files[].filename' | awk -F/ '{print $1}' | sed 's/^$/root/' | sort -u)"
+          areas_count="$(echo "${areas_raw}" | sed '/^\s*$/d' | wc -l | tr -d ' ')"
+          areas_preview="$(echo "${areas_raw}" | head -n 4 | paste -sd ', ' -)"
+          if [[ "${areas_count}" -gt 4 ]]; then
+            areas_preview="${areas_preview}, +$((areas_count - 4)) more"
+          fi
+
+          changes_type="changes"
+          if echo "${areas_raw}" | grep -qx "documentation"; then
+            if [[ "${areas_count}" == "1" ]]; then
+              changes_type="docs"
+            fi
+          fi
+
+          title="Promote ${flow} (${changes_type})"
+
+          body=$(
+            cat <<EOF
+          <!-- AUTO_PR:promotion -->
+          Auto-generated promotion PR: \`${head}\` → \`${base}\`.
+
+          **Summary**
+          - Commits: ${commits_count}
+          - Files changed: ${files_changed}
+          - Areas: ${areas_preview}
+
+          **Top Files**
+          \`\`\`
+          ${files_list}
+          \`\`\`
+          $(if [[ "${files_more}" -gt 0 ]]; then echo "_...and ${files_more} more files_"; fi)
+          EOF
+          )
+
+          pr_number="$(gh pr list --repo "${REPO}" --state open --base "${base}" --head "${head}" --json number --jq '.[0].number' || true)"
+
+          if [[ -z "${pr_number}" || "${pr_number}" == "null" ]]; then
+            echo "Creating PR ${head} -> ${base}"
+            pr_url="$(gh pr create --repo "${REPO}" --head "${head}" --base "${base}" --title "${title}" --body "${body}")"
+            echo "Created: ${pr_url}"
+
+            gh pr edit --repo "${REPO}" --add-label "auto-pr" --add-label "${changes_type}" --base "${base}" --head "${head}" >/dev/null 2>&1 || true
+          else
+            echo "Updating PR #${pr_number}"
+            current_body="$(gh pr view "${pr_number}" --repo "${REPO}" --json body --jq '.body' || true)"
+            if echo "${current_body}" | grep -q "<!-- AUTO_PR:promotion -->"; then
+              gh pr edit "${pr_number}" --repo "${REPO}" --title "${title}" --body "${body}"
+            else
+              gh pr edit "${pr_number}" --repo "${REPO}" --title "${title}"
+            fi
+
+            gh pr edit "${pr_number}" --repo "${REPO}" --add-label "auto-pr" --add-label "${changes_type}" >/dev/null 2>&1 || true
+          fi
