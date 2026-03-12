@@ -6,10 +6,6 @@ on:
     tags: ["v*"]
     paths:
       - "documentation/**"
-  pull_request:
-    branches: ["main", "dev", "staging"]
-    paths:
-      - "documentation/**"
 
 jobs:
   build:
@@ -24,12 +20,25 @@ jobs:
 
       - uses: docker/setup-buildx-action@v3
 
+      - name: Select GHCR token
+        if: github.event_name != 'pull_request'
+        shell: bash
+        env:
+          GHCR_PAT: ${{ secrets.GHCR_PAT }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          if [[ -n "${GHCR_PAT:-}" ]]; then
+            echo "GHCR_TOKEN=${GHCR_PAT}" >> "$GITHUB_ENV"
+          else
+            echo "GHCR_TOKEN=${GITHUB_TOKEN}" >> "$GITHUB_ENV"
+          fi
+
       - uses: docker/login-action@v3
         if: github.event_name != 'pull_request'
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}
+          password: ${{ env.GHCR_TOKEN }}
 
       - name: Compute image tags
         id: vars
@@ -68,3 +77,51 @@ jobs:
           file: ./documentation/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.vars.outputs.tags }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.url=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.title=docs
+            org.opencontainers.image.description=School Management documentation image
+
+      - name: Link package to repository
+        if: github.event_name != 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GHCR_PAT }}
+          script: |
+            const ownerType = String(context.payload.repository?.owner?.type || '').toLowerCase();
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const repositoryId = context.payload.repository?.id;
+
+            if (!repositoryId) {
+              core.warning('repository.id not found; skipping package linking.');
+              return;
+            }
+
+            const packageName = `${repo}/docs`;
+
+            const request = ownerType === 'organization'
+              ? {
+                  method: 'PUT',
+                  url: '/orgs/{org}/packages/{package_type}/{package_name}/repository/{repository_id}',
+                  org: owner,
+                  package_type: 'container',
+                  package_name: packageName,
+                  repository_id: repositoryId,
+                }
+              : {
+                  method: 'PUT',
+                  url: '/user/packages/{package_type}/{package_name}/repository/{repository_id}',
+                  package_type: 'container',
+                  package_name: packageName,
+                  repository_id: repositoryId,
+                };
+
+            try {
+              await github.request(request);
+              core.info(`Linked package ${packageName} to ${owner}/${repo}.`);
+            } catch (e) {
+              core.warning(`Failed to link package ${packageName} to repo: ${e.message}`);
+            }
