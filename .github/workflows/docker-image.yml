@@ -6,10 +6,6 @@ on:
     tags: ["v*"]
     paths:
       - "documentation/**"
-  pull_request:
-    branches: ["main", "dev", "staging"]
-    paths:
-      - "documentation/**"
 
 jobs:
   build:
