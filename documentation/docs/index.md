@@ -15,4 +15,4 @@ This documentation is built with MkDocs (Material theme) and is served by the do
 
 - Docker Compose: `docker compose up --build`
 - Open: http://localhost:8000/
-UPDATE12
+UPDATE122
