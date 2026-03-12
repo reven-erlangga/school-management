@@ -68,3 +68,9 @@ jobs:
           file: ./documentation/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.vars.outputs.tags }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.url=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.title=docs
+            org.opencontainers.image.description=School Management documentation image
