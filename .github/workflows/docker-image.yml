@@ -83,3 +83,45 @@ jobs:
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.title=docs
             org.opencontainers.image.description=School Management documentation image
+
+      - name: Link package to repository
+        if: github.event_name != 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GHCR_PAT }}
+          script: |
+            const ownerType = String(context.payload.repository?.owner?.type || '').toLowerCase();
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const repositoryId = context.payload.repository?.id;
+
+            if (!repositoryId) {
+              core.warning('repository.id not found; skipping package linking.');
+              return;
+            }
+
+            const packageName = `${repo}/docs`;
+
+            const request = ownerType === 'organization'
+              ? {
+                  method: 'PUT',
+                  url: '/orgs/{org}/packages/{package_type}/{package_name}/repository/{repository_id}',
+                  org: owner,
+                  package_type: 'container',
+                  package_name: packageName,
+                  repository_id: repositoryId,
+                }
+              : {
+                  method: 'PUT',
+                  url: '/user/packages/{package_type}/{package_name}/repository/{repository_id}',
+                  package_type: 'container',
+                  package_name: packageName,
+                  repository_id: repositoryId,
+                };
+
+            try {
+              await github.request(request);
+              core.info(`Linked package ${packageName} to ${owner}/${repo}.`);
+            } catch (e) {
+              core.warning(`Failed to link package ${packageName} to repo: ${e.message}`);
+            }
